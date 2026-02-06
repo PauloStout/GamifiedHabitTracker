@@ -1,10 +1,11 @@
+from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     HabitViewSet, TaskViewSet, SubTaskViewSet,
     FocusSessionViewSet, DailyMetricsViewSet,
     ReminderViewSet, StreakViewSet,
     AchievementViewSet, UserAchievementViewSet,
-    SocialPodViewSet, UserPodViewSet
+    SocialPodViewSet, UserPodViewSet, dashboard_data
 )
 
 router = DefaultRouter()
@@ -21,4 +22,10 @@ router.register(r'user-achievements', UserAchievementViewSet)
 router.register(r'social-pods', SocialPodViewSet)
 router.register(r'user-pods', UserPodViewSet)
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("dashboard/", dashboard_data),
+    path('', include(router.urls)),
+
+    path('api/auth/', include('accounts.urls')),
+
+]

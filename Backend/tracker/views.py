@@ -1,8 +1,9 @@
+from django.http import JsonResponse
 from rest_framework.viewsets import ModelViewSet
 from .models import (
     Habit, Task, FocusSession, DailyMetrics,
     Reminder, Achievement, UserAchievement,
-    SocialPod, UserPod, Streak, SubTask
+    SocialPod, UserPod, Streak, SubTask, UserProfile
 )
 from .serializers import (
     HabitSerializer, TaskSerializer, FocusSessionSerializer,
@@ -65,3 +66,17 @@ class SocialPodViewSet(ModelViewSet):
 class UserPodViewSet(ModelViewSet):
     queryset = UserPod.objects.all()
     serializer_class = UserPodSerializer
+
+
+from tracker.models import UserProfile
+
+
+def dashboard_data(request):
+    users = UserProfile.objects.all().values(
+        "user__username",
+        "total_xp",
+        "level",
+        "streaks_enabled",
+    )
+
+    return JsonResponse({"users": list(users)})
