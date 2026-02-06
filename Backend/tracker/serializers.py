@@ -69,3 +69,5 @@ class UserPodSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserPod
         fields = '__all__'
+
+

@@ -1,5 +1,12 @@
 from django.apps import AppConfig
 
+class TrackersConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "trackers"
+
+    def ready(self):
+        import trackers.signals
 
 class TrackerConfig(AppConfig):
     name = 'tracker'
+
