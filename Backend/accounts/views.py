@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.serializers import RegisterSerializer
+from tracker.models import UserProfile
 
 
 class RegisterView(APIView):
@@ -15,11 +16,14 @@ class RegisterView(APIView):
 
             # Create JWT tokens immediately
             refresh = RefreshToken.for_user(user)
+
             return Response(
                 {
+                    "user_id": user.id,           # ✅ Add user ID
+                    "username": user.username,
+                    "email": user.email,           # optional
                     "refresh": str(refresh),
                     "access": str(refresh.access_token),
-                    "username": user.username,
                 },
                 status=status.HTTP_201_CREATED,
             )
@@ -39,3 +43,25 @@ class CheckUserView(APIView):
                User.objects.filter(email=username_or_email).first()
 
         return Response({"exists": bool(user)})
+
+# accounts/views.py
+class CompleteProfileView(APIView):
+    def post(self, request):
+        user_id = request.data.get("user_id")
+        first_name = request.data.get("first_name")
+        last_name = request.data.get("last_name")
+        motivation = request.data.get("motivation")
+
+        if not user_id:
+            return Response({"error": "Missing user_id"}, status=400)
+
+        user = User.objects.get(id=user_id)
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.motivation = motivation
+        profile.save()
+
+        return Response({"success": True})

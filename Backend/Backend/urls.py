@@ -9,7 +9,6 @@ urlpatterns = [
     path('', home),
     path('admin/', admin.site.urls),
     path('api/', include('tracker.urls')),
-
     path('api/auth/', include('accounts.urls')),
 
 ]

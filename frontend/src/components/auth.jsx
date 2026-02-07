@@ -1,90 +1,96 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { checkUser, login, register } from "../api/api";
+import { checkUser, login, register, completeProfile } from "../api/api";
 
-const Auth = () => {
+export default function Auth() {
   const navigate = useNavigate();
+
+  const [step, setStep] = useState("auth"); // auth | profile
+  const [mode, setMode] = useState(null); // login | register
 
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState(""); // only for register
-  const [mode, setMode] = useState("login"); // "login" or "register"
-  const [error, setError] = useState("");
 
-  const handleNext = async () => {
-    setError("");
-    try {
-      const exists = await checkUser(usernameOrEmail);
-      setMode(exists ? "login" : "register");
-      if (!exists) setEmail(usernameOrEmail); // optional prefill
-    } catch (err) {
-      setError("Something went wrong");
+  const [userId, setUserId] = useState(null);
+
+  // Profile step
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [motivation, setMotivation] = useState("");
+
+  const handleCheckUser = async () => {
+    const exists = await checkUser(usernameOrEmail);
+    setMode(exists ? "login" : "register");
+  };
+
+  const handleAuthSubmit = async () => {
+    if (mode === "login") {
+      const res = await login(usernameOrEmail, password);
+      setUserId(res.user_id);
+      navigate("/dashboard");
+    }
+
+    if (mode === "register") {
+      const res = await register(usernameOrEmail, usernameOrEmail, password);
+      setUserId(res.user_id);
+      setStep("profile");
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    try {
-      if (mode === "login") {
-        const data = await login(usernameOrEmail, password);
-        localStorage.setItem("accessToken", data.access);
-        navigate("/");
-      } else {
-        await register(usernameOrEmail, email, password);
-        // auto-login after registration
-        const data = await login(usernameOrEmail, password);
-        localStorage.setItem("accessToken", data.access);
-        navigate("/");
-      }
-    } catch (err) {
-      setError("Invalid credentials or registration failed");
-    }
+  const handleProfileSubmit = async () => {
+    await completeProfile(userId, { first_name: firstName, last_name: lastName, motivation });
+    navigate("/dashboard");
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>{mode === "login" ? "Login" : "Register"}</h2>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <input
-        placeholder="Username or Email"
-        value={usernameOrEmail}
-        onChange={(e) => setUsernameOrEmail(e.target.value)}
-        required
-        disabled={mode !== "login" && mode !== "register"} // prevent editing after check
-      />
-
-      {mode === "register" && (
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+    <div style={{ maxWidth: 400, margin: "auto" }}>
+      {step === "auth" && (
+        <>
+          <h2>Welcome</h2>
+          <input
+            placeholder="Username or email"
+            value={usernameOrEmail}
+            onChange={(e) => setUsernameOrEmail(e.target.value)}
+          />
+          {mode && (
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          )}
+          {!mode ? (
+            <button onClick={handleCheckUser}>Continue</button>
+          ) : (
+            <button onClick={handleAuthSubmit}>
+              {mode === "login" ? "Login" : "Create account"}
+            </button>
+          )}
+        </>
       )}
 
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-
-      {mode === "login" && (
-        <button type="button" onClick={handleNext}>
-          Next
-        </button>
+      {step === "profile" && (
+        <>
+          <h2>Tell us about you</h2>
+          <input
+            placeholder="First name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+          />
+          <input
+            placeholder="Last name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+          />
+          <textarea
+            placeholder="What motivates you?"
+            value={motivation}
+            onChange={(e) => setMotivation(e.target.value)}
+          />
+          <button onClick={handleProfileSubmit}>Go to dashboard</button>
+        </>
       )}
-
-      {(mode === "register" || mode === "login") && (
-        <button type="submit">{mode === "login" ? "Login" : "Create Account"}</button>
-      )}
-    </form>
+    </div>
   );
-};
-
-export default Auth;
+}

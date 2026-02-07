@@ -1,4 +1,6 @@
 from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from .models import (
     Habit, Task, FocusSession, DailyMetrics,
@@ -71,12 +73,28 @@ class UserPodViewSet(ModelViewSet):
 from tracker.models import UserProfile
 
 
-def dashboard_data(request):
-    users = UserProfile.objects.all().values(
-        "user__username",
-        "total_xp",
-        "level",
-        "streaks_enabled",
-    )
+from django.http import JsonResponse
+from tracker.models import UserProfile
 
-    return JsonResponse({"users": list(users)})
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def dashboard_data(request):
+    # Ensure user is logged in
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    try:
+        profile = UserProfile.objects.select_related("user").get(user=request.user)
+        data = {
+            "username": profile.user.username,
+            "first_name": profile.user.first_name,
+            "last_name": profile.user.last_name,
+            "motivation": profile.motivation,
+            "level": profile.level,
+            "total_xp": profile.total_xp,
+        }
+        return JsonResponse(data)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "Profile not found"}, status=404)
+
+
