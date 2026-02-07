@@ -48,7 +48,7 @@ export default function Auth() {
         <>
           <h2>Welcome</h2>
           <input
-            placeholder="Username or email"
+            placeholder="Email"
             value={usernameOrEmail}
             onChange={(e) => setUsernameOrEmail(e.target.value)}
           />

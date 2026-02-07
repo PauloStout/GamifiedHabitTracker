@@ -8,20 +8,40 @@ from .models import (
 class HabitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Habit
-        fields = '__all__'
-
-
-class TaskSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Task
-        fields = '__all__'
+        fields = "__all__"
+        read_only_fields = ("user", "xp_reward")
 
 
 class SubTaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
-        fields = '__all__'
+        fields = ["id", "description", "is_completed"]
 
+class TaskSerializer(serializers.ModelSerializer):
+    subtasks = SubTaskSerializer(many=True, required=False)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "task_title",
+            "task_notes",
+            "task_difficulty",
+            "xp_reward",
+            "is_completed",
+            "due_date",
+            "deadline",
+            "subtasks",
+        ]
+
+    def create(self, validated_data):
+        subtasks_data = validated_data.pop("subtasks", [])
+        task = Task.objects.create(**validated_data)  # user is added by perform_create
+
+        for subtask_data in subtasks_data:
+            SubTask.objects.create(task=task, **subtask_data)
+
+        return task
 
 class FocusSessionSerializer(serializers.ModelSerializer):
     class Meta:

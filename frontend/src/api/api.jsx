@@ -55,3 +55,50 @@ export const fetchDashboardData = async () => {
   const res = await privateApi.get("dashboard/");
   return res.data;
 };
+
+// Habits
+export const fetchHabits = async () => {
+  const res = await privateApi.get("habits/");
+  return res.data;
+};
+
+export const createHabit = async (habit) => {
+  const res = await privateApi.post("habits/", habit);
+  return res.data;
+};
+
+export const completeHabit = async (habitId) => {
+  const res = await privateApi.post(`habits/${habitId}/complete/`);
+  return res.data;
+};
+
+export const deleteHabit = async (habitId) => {
+  const res = await privateApi.delete(`habits/${habitId}/`);
+  return res.data;
+};
+
+export const createTask = async (taskData) => {
+  // taskData can include subtasks like:
+  // { task_title: "Example", task_difficulty: "easy", subtasks: [{ description: "sub1" }, { description: "sub2" }] }
+  const res = await privateApi.post("tasks/", taskData);
+  return res.data;
+};
+
+export const fetchTasks = async () => {
+  const res = await privateApi.get("tasks/");
+  return res.data;
+};
+
+export const deleteTask = async (taskId) => {
+  await privateApi.delete(`tasks/${taskId}/`);
+};
+
+export const completeTask = async (taskId) => {
+  const res = await privateApi.post(`tasks/${taskId}/complete/`);
+  return res.data;
+};
+
+export const toggleSubtask = async (subtaskId) => {
+  const res = await privateApi.post(`subtasks/${subtaskId}/toggle/`);
+  return res.data;
+};

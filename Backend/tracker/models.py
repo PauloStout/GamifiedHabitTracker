@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 # -----------------------------
@@ -10,16 +11,28 @@ class UserProfile(models.Model):
     level = models.IntegerField(default=1)
     total_xp = models.IntegerField(default=0)
     motivation = models.CharField(max_length=255, blank=True)
-
     dark_mode_enabled = models.BooleanField(default=False)
     xp_enabled = models.BooleanField(default=True)
+    current_level_xp = models.IntegerField(default=0)
+    xp_for_next_level = models.IntegerField(default=100)
     streaks_enabled = models.BooleanField(default=True)
     leaderboards_enabled = models.BooleanField(default=True)
-
     date_created = models.DateTimeField(auto_now_add=True)
 
+
+    def add_xp(self, xp):
+        self.total_xp += xp
+        self.current_level_xp += xp
+
+        while self.current_level_xp >= self.xp_for_next_level:
+            self.current_level_xp -= self.xp_for_next_level
+            self.level += 1
+            self.xp_for_next_level = int(self.xp_for_next_level * 1.25)
+
+        self.save()
+
     def __str__(self):
-        return self.user.username
+        return self.user.first_name
 
 
 # -----------------------------
@@ -32,6 +45,7 @@ class Habit(models.Model):
     habit_difficulty = models.CharField(max_length=50)
     habit_frequency = models.CharField(max_length=50)  # daily, weekly, etc.
     xp_reward = models.IntegerField(default=0)
+    is_completed = models.BooleanField(default=False)
 
     def __str__(self):
         return self.habit_title
@@ -47,6 +61,17 @@ class Task(models.Model):
     task_difficulty = models.CharField(max_length=50)
     xp_reward = models.IntegerField(default=0)
     is_completed = models.BooleanField(default=False)
+    due_date = models.DateField(null=True, blank=True)
+    deadline = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+
+    def is_overdue(self):
+        if self.deadline:
+            return timezone.now() > self.deadline
+        if self.due_date:
+            return timezone.now().date() > self.due_date
+        return False
 
     def __str__(self):
         return self.task_title
@@ -56,11 +81,11 @@ class Task(models.Model):
 # SUBTASKS (for habits OR tasks)
 # -----------------------------
 class SubTask(models.Model):
-    parent_type = models.CharField(
-        max_length=10,
-        choices=[("habit", "Habit"), ("task", "Task")]
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="subtasks"
     )
-    parent_id = models.IntegerField()
     description = models.CharField(max_length=255)
     is_completed = models.BooleanField(default=False)
 
@@ -79,7 +104,7 @@ class FocusSession(models.Model):
     completed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.session_minutes} mins"
+        return f"{self.user.first_name} - {self.session_minutes} mins"
 
 
 # -----------------------------
@@ -98,7 +123,7 @@ class DailyMetrics(models.Model):
         unique_together = ("user", "metric_date")
 
     def __str__(self):
-        return f"{self.user.username} - {self.metric_date}"
+        return f"{self.user.first_name} - {self.metric_date}"
 
 
 # -----------------------------
@@ -127,7 +152,7 @@ class Reminder(models.Model):
     reminders_enabled = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Reminder for {self.user.username}"
+        return f"Reminder for {self.user.first_name}"
 
 
 # -----------------------------
