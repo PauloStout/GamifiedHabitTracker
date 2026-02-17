@@ -36,11 +36,19 @@ export default function Auth() {
       setStep("profile");
     }
   };
+  const [primaryTheme, setPrimaryTheme] = useState("studies");
 
   const handleProfileSubmit = async () => {
-    await completeProfile(userId, { first_name: firstName, last_name: lastName, motivation });
+    await completeProfile(userId, {
+      first_name: firstName,
+      last_name: lastName,
+      motivation,
+      primary_theme: primaryTheme,
+    });
+
     navigate("/dashboard");
   };
+
 
   return (
     <div style={{ maxWidth: 400, margin: "auto" }}>
@@ -84,10 +92,22 @@ export default function Auth() {
             onChange={(e) => setLastName(e.target.value)}
           />
           <textarea
-            placeholder="What motivates you?"
+            placeholder="I am motivated by:"
             value={motivation}
             onChange={(e) => setMotivation(e.target.value)}
           />
+          <h3>What do you struggle most with in your routine?</h3>
+
+          <select
+            value={primaryTheme}
+            onChange={(e) => setPrimaryTheme(e.target.value)}
+          >
+            <option value="studies">Studies</option>
+            <option value="exercise">Exercise</option>
+            <option value="sleep">Sleep</option>
+            <option value="nutrition">Nutrition</option>
+          </select>
+
           <button onClick={handleProfileSubmit}>Go to dashboard</button>
         </>
       )}

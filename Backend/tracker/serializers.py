@@ -2,14 +2,19 @@ from rest_framework import serializers
 from .models import (
     Habit, Task, FocusSession, DailyMetrics,
     Reminder, Achievement, UserAchievement,
-    SocialPod, UserPod, Streak, SubTask
+    SocialPod, UserPod, SubTask
 )
 
 class HabitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Habit
         fields = "__all__"
-        read_only_fields = ("user", "xp_reward")
+        read_only_fields = (
+            "user",
+            "xp_reward",
+            "current_streak",
+            "longest_streak",
+        )
 
 
 class SubTaskSerializer(serializers.ModelSerializer):
@@ -32,6 +37,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "due_date",
             "deadline",
             "subtasks",
+            "task_theme",
         ]
 
     def create(self, validated_data):
@@ -57,12 +63,6 @@ class DailyMetricsSerializer(serializers.ModelSerializer):
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reminder
-        fields = '__all__'
-
-
-class StreakSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Streak
         fields = '__all__'
 
 

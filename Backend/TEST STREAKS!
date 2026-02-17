@@ -1,0 +1,10 @@
+from tracker.models import Habit
+from django.utils import timezone
+from datetime import timedelta
+
+habit = Habit.objects.get(id=25)
+
+# Pretend user completed yesterday
+habit.last_completed_date = timezone.now().date() - timedelta(days=1)
+habit.current_streak = 7
+habit.save()

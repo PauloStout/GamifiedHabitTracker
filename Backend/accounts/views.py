@@ -51,6 +51,7 @@ class CompleteProfileView(APIView):
         first_name = request.data.get("first_name")
         last_name = request.data.get("last_name")
         motivation = request.data.get("motivation")
+        primary_theme = request.data.get("primary_theme")
 
         if not user_id:
             return Response({"error": "Missing user_id"}, status=400)
@@ -62,6 +63,10 @@ class CompleteProfileView(APIView):
 
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.motivation = motivation
+
+        if primary_theme:
+            profile.primary_theme = primary_theme
+
         profile.save()
 
         return Response({"success": True})

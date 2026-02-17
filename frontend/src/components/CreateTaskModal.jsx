@@ -6,6 +6,7 @@ function CreateTaskModal({ onClose, onCreated }) {
   const [notes, setNotes] = useState("");
   const [difficulty, setDifficulty] = useState("Easy");
   const [subtasks, setSubtasks] = useState([""]);
+  const [theme, setTheme] = useState("studies");
 
   const addSubtask = () => {
     setSubtasks([...subtasks, ""]);
@@ -23,6 +24,7 @@ function CreateTaskModal({ onClose, onCreated }) {
       task_notes: notes,
       task_difficulty: difficulty,
       xp_reward: 25,
+      task_theme: theme,
       subtasks: subtasks
         .filter((s) => s.trim() !== "")
         .map((s) => ({ description: s })),
@@ -61,6 +63,18 @@ function CreateTaskModal({ onClose, onCreated }) {
         <option value="medium">Medium</option>
         <option value="hard">Hard</option>
       </select>
+
+        <h3>Category</h3>
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+        >
+          <option value="studies">Studies</option>
+          <option value="exercise">Exercise</option>
+          <option value="sleep">Sleep</option>
+          <option value="nutrition">Nutrition</option>
+        </select>
+
 
       <h3>Subtasks</h3>
 

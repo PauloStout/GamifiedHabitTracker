@@ -6,6 +6,88 @@ export default function CreateHabitModal({ onClose, onCreated, habit, onUpdated 
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [difficulty, setDifficulty] = useState("medium");
+  const THEME_CHOICES = [
+  { value: "studies", label: "Studies" },
+  { value: "exercise", label: "Exercise" },
+  { value: "sleep", label: "Sleep" },
+  { value: "nutrition", label: "Nutrition" },
+  ];
+  const [theme, setTheme] = useState("studies"); // default
+  const HABIT_PRESETS = {
+  studies: [
+    {
+      title: "1 Hour Deep Study",
+      notes: "Focused, distraction-free study session",
+      difficulty: "medium",
+    },
+    {
+      title: "Review Flashcards",
+      notes: "Spaced repetition session",
+      difficulty: "easy",
+    },
+    {
+      title: "Past Paper Practice",
+      notes: "Timed exam-style questions",
+      difficulty: "hard",
+    },
+  ],
+  exercise: [
+    {
+      title: "30 Min Workout",
+      notes: "Strength or cardio session",
+      difficulty: "medium",
+    },
+    {
+      title: "10k Steps",
+      notes: "Daily walking goal",
+      difficulty: "easy",
+    },
+    {
+      title: "Stretching Session",
+      notes: "Mobility & flexibility",
+      difficulty: "easy",
+    },
+  ],
+  sleep: [
+    {
+      title: "Sleep Before 11PM",
+      notes: "No screens 30 min before bed",
+      difficulty: "medium",
+    },
+    {
+      title: "8 Hours Sleep",
+      notes: "Track full rest cycle",
+      difficulty: "medium",
+    },
+  ],
+  nutrition: [
+    {
+      title: "Drink 2L Water",
+      notes: "Hydration goal",
+      difficulty: "easy",
+    },
+    {
+      title: "No Junk Food",
+      notes: "Clean eating day",
+      difficulty: "hard",
+    },
+    {
+      title: "Eat my 5 a day",
+      notes: "Balanced nutrition focus",
+      difficulty: "medium",
+    },
+  ],
+};
+
+
+useEffect(() => {
+  if (habit) {
+    setTitle(habit.habit_title);
+    setNotes(habit.habit_notes);
+    setDifficulty(habit.habit_difficulty || "medium");
+    setTheme(habit.habit_theme || "studies");
+  }
+}, [habit]);
 
   // Prefill fields if editing
   useEffect(() => {
@@ -23,6 +105,7 @@ export default function CreateHabitModal({ onClose, onCreated, habit, onUpdated 
         habit_notes: notes,
         habit_difficulty: difficulty,
         habit_frequency: "daily",
+        habit_theme: theme,
       };
 
       if (habit && onUpdated) {
@@ -69,6 +152,36 @@ export default function CreateHabitModal({ onClose, onCreated, habit, onUpdated 
 
       <button onClick={submit}>{habit ? "Update" : "Create"}</button>
       <button onClick={onClose}>Cancel</button>
+      <label>Theme:</label>
+      <select value={theme} onChange={(e) => setTheme(e.target.value)}>
+        {THEME_CHOICES.map((t) => (
+          <option key={t.value} value={t.value}>
+            {t.label}
+          </option>
+        ))}
+      </select>
+
+        <label>Choose Preset:</label>
+        <select
+          onChange={(e) => {
+            const presetIndex = e.target.value;
+            if (presetIndex === "") return;
+
+            const preset = HABIT_PRESETS[theme][presetIndex];
+
+            setTitle(preset.title);
+            setNotes(preset.notes);
+            setDifficulty(preset.difficulty);
+          }}
+        >
+          <option value="">-- Select a preset --</option>
+          {HABIT_PRESETS[theme].map((preset, index) => (
+            <option key={index} value={index}>
+              {preset.title}
+            </option>
+          ))}
+        </select>
+
     </div>
   );
 }

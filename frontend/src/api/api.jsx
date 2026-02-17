@@ -108,3 +108,13 @@ export const createFocusSession = async (data) => {
   return res.data;
 };
 
+// Fetch leaderboard based on type: "xp", "streak", "focus"
+export const fetchLeaderboard = async (type = "xp") => {
+  const res = await privateApi.get(`leaderboard/?type=${type}`);
+  return res.data;
+};
+
+export const fetchProgressData = async () => {
+  const res = await privateApi.get("progress/");
+  return res.data;
+};

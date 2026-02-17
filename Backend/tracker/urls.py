@@ -5,9 +5,10 @@ from . import views
 from .views import (
     HabitViewSet, TaskViewSet, SubTaskViewSet,
     FocusSessionViewSet, DailyMetricsViewSet,
-    ReminderViewSet, StreakViewSet,
-    AchievementViewSet, UserAchievementViewSet,
-    SocialPodViewSet, UserPodViewSet, dashboard_data, complete_habit, add_habit
+    ReminderViewSet, AchievementViewSet,
+    UserAchievementViewSet, SocialPodViewSet,
+    UserPodViewSet, dashboard_data,
+    complete_habit, add_habit, leaderboard_view,
 )
 
 router = DefaultRouter()
@@ -17,7 +18,6 @@ router.register(r'subtasks', SubTaskViewSet)
 router.register(r'focus-sessions', FocusSessionViewSet)
 router.register(r'daily-metrics', DailyMetricsViewSet)
 router.register(r'reminders', ReminderViewSet)
-router.register(r'streaks', StreakViewSet)
 router.register(r'achievements', AchievementViewSet)
 router.register(r'user-achievements', UserAchievementViewSet)
 router.register(r'social-pods', SocialPodViewSet)
@@ -30,7 +30,7 @@ urlpatterns = [
     path("", include(router.urls)),
     path("habits/<int:habit_id>/complete/", complete_habit),
     path("habits/add/", add_habit),
-    path('api/tasks/<int:task_id>/complete/', views.complete_task, name='complete-task'),
     path('api/subtasks/<int:subtask_id>/toggle/', views.toggle_subtask, name='toggle-subtask'),
-
+    path("leaderboard/", leaderboard_view),
+    path("progress/", views.user_progress),
 ]

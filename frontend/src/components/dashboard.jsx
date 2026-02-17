@@ -15,6 +15,17 @@ import CreateTaskModal from "./CreateTaskModal";
 import FocusSession from "./FocusSession.jsx";
 import "./dashboard.css";
 
+import MascotOverlay from "./MascotOverlay";
+
+import FocusMascot from "../assets/mascots/FocusMascot.png";
+import NutritionMascot from "../assets/mascots/NutritionMascot.png";
+import StudyMascot from "../assets/mascots/StudyMascot.png";
+import SleepMascot from "../assets/mascots/SleepMascot.png";
+import ExerciseMascot from "../assets/mascots/ExerciseMascot.png";
+import WavingMascot from "../assets/mascots/WavingMascot.png";
+import CheeringMascot from "../assets/mascots/CheeringMascot.png";
+
+
 function Dashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [habits, setHabits] = useState([]);
@@ -25,12 +36,15 @@ function Dashboard() {
   const [error, setError] = useState(null);
   const [editingHabit, setEditingHabit] = useState(null);
   const [showFocus, setShowFocus] = useState(false);
+  const [mascotSrc, setMascotSrc] = useState(null);
+  const [mascotMessage, setMascotMessage] = useState("");
 
   const loadDashboard = async () => {
     try {
       const data = await fetchDashboardData();
       setDashboard(data);
       localStorage.setItem("dashboardData", JSON.stringify(data));
+      return data;
     } catch {
       setError("Failed to load dashboard");
     }
@@ -60,19 +74,60 @@ function Dashboard() {
     );
   }, []);
 
-  const handleCompleteHabit = async (habitId) => {
+  const handleCompleteHabit = async (habitId, habitTheme) => {
     try {
-      await completeHabit(habitId);
+      const oldLevel = dashboard.level;
+
+      const updatedHabit = await completeHabit(habitId);
+      const updatedDashboard = await loadDashboard();
+
+      const xpEarned = updatedHabit.xp_awarded;
+
+      let mascot;
+      let message;
+
+      switch (habitTheme) {
+        case "studies":
+          mascot = StudyMascot;
+          message = `Study streak continues! 📚 +${xpEarned} XP`;
+          break;
+        case "nutrition":
+          mascot = NutritionMascot;
+          message = `Healthy choice! 🥗 +${xpEarned} XP`;
+          break;
+        case "sleep":
+          mascot = SleepMascot;
+          message = `Rest well earned 😴 +${xpEarned} XP`;
+          break;
+        case "exercise":
+          mascot = ExerciseMascot;
+          message = `Workout complete! 💪 +${xpEarned} XP`;
+          break;
+        default:
+          mascot = WavingMascot;
+          message = `Habit completed! +${xpEarned} XP`;
+      }
+
+      if (updatedDashboard.level > oldLevel) {
+        mascot = CheeringMascot;
+        message = `LEVEL UP! 🎉 You reached level ${updatedDashboard.level}! +${xpEarned} XP`;
+      }
+
+      setMascotSrc(mascot);
+      setMascotMessage(message);
+
       setHabits((prev) =>
         prev.map((h) =>
-          h.id === habitId ? { ...h, is_completed: true } : h
+          h.id === habitId
+            ? { ...h, is_completed: true, streak: updatedHabit.streak }
+            : h
         )
       );
-      loadDashboard();
     } catch {
       alert("Could not complete habit");
     }
   };
+
 
   const handleDeleteHabit = async (habitId) => {
     if (!window.confirm("Are you sure you want to delete this habit?")) return;
@@ -94,13 +149,32 @@ function Dashboard() {
       <div className="dashboard-header">
         <h1>Hi {dashboard.first_name || "there"} 👋</h1>
         <p className="motivation">
-          {dashboard.motivation || "No motivation set yet"}
+          I am motivated by {dashboard.motivation || "No motivation set yet"}
         </p>
       </div>
 
       {/* FOCUS SESSION */}
       {showFocus ? (
-        <FocusSession onExit={() => setShowFocus(false)} />
+      <FocusSession
+        onExit={() => setShowFocus(false)}
+        onComplete={async (xpFromBackend) => {
+          const xpEarned = xpFromBackend ?? 0;
+          const oldLevel = dashboard.level;
+          const updated = await loadDashboard();
+
+          if (updated.level > oldLevel) {
+            setMascotSrc(CheeringMascot);
+            setMascotMessage(
+              `LEVEL UP! 🎉 You reached level ${updated.level}! +${xpEarned} XP`
+            );
+          } else {
+            setMascotSrc(FocusMascot);
+            setMascotMessage(
+              `Great focus session! +${xpEarned} XP 🧠`
+            );
+          }
+        }}
+      />
       ) : (
         <div>
           <button onClick={() => setShowFocus(true)}>
@@ -134,41 +208,51 @@ function Dashboard() {
           </div>
         )}
 
-        {habits.map((habit) => (
-          <div
-            key={habit.id}
-            className={`habit-card ${habit.is_completed ? "completed" : ""}`}
-          >
-            <div className="habit-info">
-              <h3>{habit.habit_title}</h3>
-              {habit.habit_notes && <p className="notes">{habit.habit_notes}</p>}
-              <span className="difficulty">Difficulty: {habit.habit_difficulty}</span>
-              <span className="xp-reward">+{habit.xp_reward} XP</span>
-            </div>
+{habits.map((habit) => (
+  <div
+    key={habit.id}
+    className={`habit-card ${habit.is_completed ? "completed" : ""}`}
+    style={{
+      borderLeft: `5px solid ${
+        habit.habit_theme === "studies" ? "#4f86f7" :
+        habit.habit_theme === "exercise" ? "#34c759" :
+        habit.habit_theme === "sleep" ? "#d33f3f" :
+        habit.habit_theme === "nutrition" ? "#ff9500" : "#ccc"
+      }`
+    }}
+  >
+    <div className="habit-info">
+      <h3>{habit.habit_title}</h3>
+      {habit.habit_notes && <p className="notes">{habit.habit_notes}</p>}
+      <span className="difficulty">Difficulty: {habit.habit_difficulty}</span>
+      <span className="streak">  Streak: {habit.current_streak || 0}🔥</span>
+    </div>
 
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                className="complete-btn"
-                disabled={habit.is_completed}
-                onClick={() => handleCompleteHabit(habit.id)}
-              >
-                {habit.is_completed ? "Completed" : "Complete"}
-              </button>
-              <button className="delete-btn" onClick={() => handleDeleteHabit(habit.id)}>
-                Delete
-              </button>
-              <button
-                className="edit-btn"
-                onClick={() => {
-                  setEditingHabit(habit);   // set this habit as the one we are editing
-                  setShowCreateModal(true); // open the modal
-                }}
-              >
-                Edit
-              </button>
-            </div>
-          </div>
-        ))}
+    <div style={{ display: "flex", gap: "8px" }}>
+      <button
+        className="complete-btn"
+        disabled={habit.is_completed}
+        onClick={() => handleCompleteHabit(habit.id, habit.habit_theme)}
+      >
+        {habit.is_completed ? "Completed" : "Complete"}
+      </button>
+      <button className="delete-btn" onClick={() => handleDeleteHabit(habit.id)}>
+        Delete
+      </button>
+      <button
+        className="edit-btn"
+        onClick={() => {
+          setEditingHabit(habit);
+          setShowCreateModal(true);
+        }}
+      >
+        Edit
+      </button>
+    </div>
+  </div>
+))}
+
+
       </div>
 
       {/* CREATE HABIT MODAL */}
@@ -224,7 +308,6 @@ function Dashboard() {
                 <p>Deadline: {new Date(task.deadline).toLocaleString()}</p>
               )}
               <span className="difficulty">Difficulty: {task.task_difficulty}</span>
-              <span className="xp-reward">+{task.xp_reward} XP</span>
 
               {/* SUBTASKS */}
               {task.subtasks.map((sub) => (
@@ -267,7 +350,14 @@ function Dashboard() {
                 disabled={task.is_completed}
                 onClick={async () => {
                   try {
-                    await completeTask(task.id);
+                    const oldLevel = dashboard.level;
+
+                    const updatedTask = await completeTask(task.id);
+                    const updatedDashboard = await loadDashboard();
+
+                    const xpEarned = updatedTask.xp_awarded || 0;
+
+                    // Update task locally
                     setTasks((prev) =>
                       prev.map((t) =>
                         t.id === task.id
@@ -282,7 +372,39 @@ function Dashboard() {
                           : t
                       )
                     );
-                    loadDashboard();
+
+                    let mascot;
+                    let message;
+
+                    switch (task.task_theme) {
+                      case "studies":
+                        mascot = StudyMascot;
+                        message = `Study task complete! 📚 +${xpEarned} XP`;
+                        break;
+                      case "nutrition":
+                        mascot = NutritionMascot;
+                        message = `Healthy task done! 🥗 +${xpEarned} XP`;
+                        break;
+                      case "sleep":
+                        mascot = SleepMascot;
+                        message = `Rest task complete 😴 +${xpEarned} XP`;
+                        break;
+                      case "exercise":
+                        mascot = ExerciseMascot;
+                        message = `Workout task done 💪 +${xpEarned} XP`;
+                        break;
+                      default:
+                        mascot = StudyMascot;
+                        message = `Task completed! +${xpEarned} XP`;
+                    }
+
+                    if (updatedDashboard.level > oldLevel) {
+                      mascot = CheeringMascot;
+                      message = `LEVEL UP! 🎉 You reached level ${updatedDashboard.level}! +${xpEarned} XP`;
+                    }
+
+                    setMascotSrc(mascot);
+                    setMascotMessage(message);
                   } catch {
                     alert("Failed to complete task");
                   }
@@ -322,6 +444,14 @@ function Dashboard() {
           <>
     </>
       </div>
+        {mascotSrc && (
+          <MascotOverlay
+            key={Date.now()}   // 🔥 forces remount every time
+            src={mascotSrc}
+            message={mascotMessage}
+            onClose={() => setMascotSrc(null)}
+          />
+        )}
     </div>
   );
 }

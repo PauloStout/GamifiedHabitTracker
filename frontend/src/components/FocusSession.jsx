@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { createFocusSession, fetchDashboardData } from "../api/api";
+import { createFocusSession } from "../api/api";
 
-export default function FocusSession({ onExit }) {
+export default function FocusSession({ onExit, onComplete }) {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [repeatCount, setRepeatCount] = useState(1);
@@ -13,25 +13,35 @@ export default function FocusSession({ onExit }) {
 
   const totalSeconds = minutes * 60 + seconds;
 
-  // ✅ Save session to backend
-  const saveSession = async () => {
-    try {
-      await createFocusSession({
-        duration_minutes: originalMinutes,
-        sessions_completed: repeatCount
-      });
-
-      await fetchDashboardData();
-      alert("Focus session complete! XP awarded 💎");
-      onExit(); // return to dashboard automatically after completion
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // ✅ Timer Logic
+  // =========================
+  // TIMER LOGIC
+  // =========================
   useEffect(() => {
     let timer;
+
+    const finishAllSessions = async () => {
+      try {
+        const response = await createFocusSession({
+          duration_minutes: originalMinutes,
+          sessions_completed: repeatCount,
+        });
+
+        console.log("FOCUS RESPONSE:", response);
+
+        const xpEarned = response?.xp_earned ?? 0;
+
+        if (typeof onComplete === "function") {
+          await onComplete(xpEarned);
+        }
+
+        if (typeof onExit === "function") {
+          onExit();
+        }
+
+      } catch (err) {
+        console.error("Focus session save failed:", err);
+      }
+    };
 
     if (isRunning && totalSeconds > 0) {
       timer = setInterval(() => {
@@ -49,21 +59,26 @@ export default function FocusSession({ onExit }) {
     if (isRunning && totalSeconds === 0) {
       clearInterval(timer);
 
+      // =========================
+      // FOCUS SESSION FINISHED
+      // =========================
       if (!isBreak) {
-        // Start break
+        // Start break (5 min)
         setIsBreak(true);
         setMinutes(0);
         setSeconds(0);
       } else {
         // Break finished
         if (currentSession < repeatCount) {
-          setCurrentSession(s => s + 1);
+          // Start next focus session
+          setCurrentSession(prev => prev + 1);
           setIsBreak(false);
           setMinutes(originalMinutes);
           setSeconds(0);
         } else {
+          // All sessions completed
           setIsRunning(false);
-          saveSession();
+          finishAllSessions();
         }
       }
     }
@@ -76,21 +91,31 @@ export default function FocusSession({ onExit }) {
     totalSeconds,
     isBreak,
     currentSession,
-    repeatCount
+    repeatCount,
+    originalMinutes,
+    onComplete,
+    onExit
   ]);
 
-  const formatTime = () => {
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  };
+  // =========================
+  // HELPERS
+  // =========================
+  const formatTime = () =>
+    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
   const start = () => setIsRunning(true);
   const pause = () => setIsRunning(false);
 
   const cancel = () => {
     setIsRunning(false);
-    onExit();
+    if (typeof onExit === "function") {
+      onExit();
+    }
   };
 
+  // =========================
+  // STYLES
+  // =========================
   const containerStyle = fullscreen
     ? {
         position: "fixed",
@@ -106,15 +131,16 @@ export default function FocusSession({ onExit }) {
         alignItems: "center",
         zIndex: 9999
       }
-    : {
-        padding: 20
-      };
+    : { padding: 20 };
 
+  // =========================
+  // RENDER
+  // =========================
   return (
     <div style={containerStyle}>
       <h2>{isBreak ? "Break Time ☕" : "Focus Session"}</h2>
 
-      {/* Settings (only before starting) */}
+      {/* SETTINGS (before start only) */}
       {!isRunning && !isBreak && (
         <>
           <div style={{ marginBottom: 10 }}>
@@ -151,7 +177,9 @@ export default function FocusSession({ onExit }) {
                 type="number"
                 min="1"
                 value={repeatCount}
-                onChange={(e) => setRepeatCount(Number(e.target.value))}
+                onChange={(e) =>
+                  setRepeatCount(Math.max(1, Number(e.target.value)))
+                }
                 style={{ width: 60 }}
               />
             </label>
@@ -171,10 +199,10 @@ export default function FocusSession({ onExit }) {
         </>
       )}
 
-      {/* Timer */}
+      {/* TIMER DISPLAY */}
       <h1 style={{ fontSize: 60, margin: 20 }}>{formatTime()}</h1>
 
-      {/* Controls */}
+      {/* CONTROLS */}
       {!isRunning ? (
         <button onClick={start} style={{ fontSize: 20 }}>
           ▶️ Start

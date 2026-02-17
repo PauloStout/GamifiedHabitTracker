@@ -1,4 +1,8 @@
+from datetime import timedelta
+
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
@@ -8,15 +12,17 @@ from rest_framework.viewsets import ModelViewSet
 from .models import (
     Habit, Task, FocusSession, DailyMetrics,
     Reminder, Achievement, UserAchievement,
-    SocialPod, UserPod, Streak, SubTask
+    SocialPod, UserPod, SubTask, UserProfile,
 )
 from .serializers import (
     HabitSerializer, TaskSerializer, FocusSessionSerializer,
     DailyMetricsSerializer, ReminderSerializer,
     AchievementSerializer, UserAchievementSerializer,
-    SocialPodSerializer, UserPodSerializer,
-    StreakSerializer, SubTaskSerializer
+    SocialPodSerializer, UserPodSerializer, SubTaskSerializer
 )
+from .utils.xp import award_xp
+
+from .utils.metrics import update_daily_xp
 
 DIFFICULTY_XP = {
     "easy": 10,
@@ -24,12 +30,29 @@ DIFFICULTY_XP = {
     "hard": 50,
 }
 
+THEME_BONUS_MULTIPLIER = 1.5
+
 class HabitViewSet(ModelViewSet):
     serializer_class = HabitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Habit.objects.filter(user=self.request.user)
+        habits = Habit.objects.filter(user=self.request.user)
+
+        today = timezone.now().date()
+
+        for habit in habits:
+            if habit.should_reset():
+                # If user missed yesterday → reset streak
+                yesterday = today - timezone.timedelta(days=1)
+
+                if habit.last_completed_date and habit.last_completed_date < yesterday:
+                    habit.current_streak = 0
+
+                habit.is_completed = False
+                habit.save()
+
+        return habits
 
     def perform_create(self, serializer):
         difficulty = serializer.validated_data["habit_difficulty"]
@@ -55,23 +78,44 @@ class TaskViewSet(ModelViewSet):
         xp = DIFFICULTY_XP.get(difficulty, 10)
         serializer.save(user=self.request.user, xp_reward=xp)
 
-    # ✅ Add "complete" action
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         task = self.get_object()
+        profile = UserProfile.objects.get(user=request.user)
 
-        if not task.is_completed:
-            task.is_completed = True
-            task.save()
-            # Complete subtasks automatically
-            task.subtasks.update(is_completed=True)
+        if task.is_completed:
+            return Response({
+                "message": "Task already completed",
+                "xp_awarded": 0,
+                "total_xp": profile.total_xp,
+                "level": profile.level,
+            })
 
-            profile = UserProfile.objects.get(user=request.user)
-            profile.add_xp(task.xp_reward)
+        # Mark complete
+        task.is_completed = True
+        task.save()
+        task.subtasks.update(is_completed=True)
+
+        # Award XP
+        xp_awarded, profile = award_xp(
+            request.user,
+            base_xp=task.xp_reward,
+            obj_theme=task.task_theme
+        )
+
+        # 🔥 Update DailyMetrics
+        today = timezone.now().date()
+        daily_metric, _ = DailyMetrics.objects.get_or_create(
+            user=request.user,
+            metric_date=today
+        )
+
+        daily_metric.xp_earned += xp_awarded
+        daily_metric.save()
 
         return Response({
             "message": "Task completed",
-            "xp_awarded": task.xp_reward,
+            "xp_awarded": xp_awarded,
             "total_xp": profile.total_xp,
             "level": profile.level,
         })
@@ -104,11 +148,6 @@ class ReminderViewSet(ModelViewSet):
     serializer_class = ReminderSerializer
 
 
-class StreakViewSet(ModelViewSet):
-    queryset = Streak.objects.all()
-    serializer_class = StreakSerializer
-
-
 class AchievementViewSet(ModelViewSet):
     queryset = Achievement.objects.all()
     serializer_class = AchievementSerializer
@@ -135,6 +174,8 @@ from tracker.models import UserProfile
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def dashboard_data(request):
+
+
     # Ensure user is logged in
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -194,20 +235,24 @@ def add_habit(request):
 @permission_classes([IsAuthenticated])
 def complete_habit(request, habit_id):
     try:
-        # Get the habit for this user
         habit = Habit.objects.get(id=habit_id, user=request.user)
-        profile = UserProfile.objects.get(user=request.user)
+        today = timezone.now().date()
 
-        # Add XP to the user profile
-        profile.add_xp(habit.xp_reward)
+        if habit.last_completed_date != today:
+            habit.is_completed = True
+            habit.update_streak()
 
-        # MARK THE HABIT AS COMPLETED
-        habit.is_completed = True
-        habit.save()
+            xp_awarded, profile = award_xp(
+                request.user,
+                base_xp=habit.xp_reward,
+                obj_theme=habit.habit_theme
+            )
 
-        # Return updated info
+            # ✅ UPDATE WEEKLY XP ONLY
+            update_daily_xp(user=request.user, xp=xp_awarded)
+
         return JsonResponse({
-            "xp_awarded": habit.xp_reward,
+            "xp_awarded": xp_awarded,
             "total_xp": profile.total_xp,
             "level": profile.level,
             "habit_id": habit.id,
@@ -216,32 +261,6 @@ def complete_habit(request, habit_id):
 
     except Habit.DoesNotExist:
         return JsonResponse({"error": "Habit not found"}, status=404)
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def complete_task(request, task_id):
-    try:
-        task = Task.objects.get(id=task_id, user=request.user)
-
-        if not task.is_completed:
-            task.is_completed = True
-            task.save()
-
-            # Auto-complete all subtasks
-            task.subtasks.update(is_completed=True)
-
-            profile = UserProfile.objects.get(user=request.user)
-            profile.add_xp(task.xp_reward)
-
-        return Response({
-            "message": "Task completed",
-            "xp_awarded": task.xp_reward,
-            "total_xp": profile.total_xp,
-            "level": profile.level,
-        })
-
-    except Task.DoesNotExist:
-        return Response({"error": "Task not found"}, status=404)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -273,16 +292,124 @@ class FocusSessionViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         duration = serializer.validated_data["duration_minutes"]
-        sessions = serializer.validated_data["sessions_completed"]
+        sessions = serializer.validated_data.get("sessions_completed", 1)
 
-        xp = duration * sessions
+        total_minutes = duration * sessions
+        xp_to_award = total_minutes  # 1 XP per minute
 
-        # ✅ Get the user's profile properly
-        profile = UserProfile.objects.get(user=self.request.user)
+        today = timezone.now().date()
 
-        # ✅ Use your existing XP system
-        profile.add_xp(xp)
+        # ✅ AWARD XP TO USER PROFILE
+        xp_awarded, profile = award_xp(
+            self.request.user,
+            base_xp=xp_to_award,
+            obj_theme=None  # focus sessions don’t use themes
+        )
 
-        # ✅ Save the focus session
-        serializer.save(user=self.request.user, xp_earned=xp)
+        # ✅ UPDATE DAILY METRICS
+        daily_metric, _ = DailyMetrics.objects.get_or_create(
+            user=self.request.user,
+            metric_date=today
+        )
 
+        daily_metric.total_study_minutes += total_minutes
+        daily_metric.xp_earned += xp_awarded
+        daily_metric.save()
+
+        # ✅ SAVE FOCUS SESSION
+        serializer.save(
+            user=self.request.user,
+            xp_earned=xp_awarded
+        )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def leaderboard_view(request):
+    board_type = request.GET.get("type", "xp")
+    today = timezone.now().date()
+    start_week = today - timedelta(days=6)
+
+    if board_type == "xp":
+        results = (
+            DailyMetrics.objects
+            .filter(metric_date__gte=start_week)
+            .values("user__first_name")
+            .annotate(total=Sum("xp_earned"))
+            .order_by("-total")[:10]
+        )
+
+        data = [
+            {"name": r["user__first_name"], "value": r["total"] or 0}
+            for r in results
+        ]
+
+    elif board_type == "focus":
+        results = (
+            DailyMetrics.objects
+            .filter(metric_date__gte=start_week)
+            .values("user__first_name")
+            .annotate(total=Sum("total_study_minutes"))
+            .order_by("-total")[:10]
+        )
+
+        data = [
+            {"name": r["user__first_name"], "value": r["total"] or 0}
+            for r in results
+        ]
+
+    elif board_type == "streak":
+        profiles = UserProfile.objects.select_related("user")
+        profiles = sorted(
+            profiles,
+            key=lambda p: max([h.current_streak for h in p.user.habits.all()] or [0]),
+            reverse=True
+        )[:10]
+
+        data = [
+            {
+                "name": p.user.first_name,
+                "value": max([h.current_streak for h in p.user.habits.all()] or [0])
+            }
+            for p in profiles
+        ]
+
+    else:
+        return Response({"error": "Invalid leaderboard type"}, status=400)
+
+    return Response(data)
+
+from django.db.models import Sum
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def user_progress(request):
+    today = timezone.now().date()
+    start_date = today - timedelta(days=6)
+
+    metrics = (
+        DailyMetrics.objects
+        .filter(user=request.user, metric_date__gte=start_date)
+        .order_by("metric_date")
+    )
+
+    data = []
+
+    for metric in metrics:
+        week_start = metric.metric_date - timedelta(days=6)
+
+        weekly_xp = (
+            DailyMetrics.objects
+            .filter(user=request.user,
+                    metric_date__gte=week_start,
+                    metric_date__lte=metric.metric_date)
+            .aggregate(total=Sum("xp_earned"))["total"] or 0
+        )
+
+        data.append({
+            "date": metric.metric_date.strftime("%d %b"),
+            "weekly_xp": weekly_xp,
+            "focus_minutes": metric.total_study_minutes,
+            "streak": metric.habits_completed,
+        })
+
+    return Response(data)
