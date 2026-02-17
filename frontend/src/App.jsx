@@ -1,17 +1,13 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Dashboard from "./components/dashboard";
 import Auth from "./components/auth.jsx";
-
-const isAuthenticated = () => !!localStorage.getItem("accessToken");
-
-const ProtectedRoute = ({ children }) => {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
-};
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<Auth />} />
+
       <Route
         path="/dashboard"
         element={
@@ -20,6 +16,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/"
         element={

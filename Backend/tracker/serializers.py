@@ -46,14 +46,13 @@ class TaskSerializer(serializers.ModelSerializer):
 class FocusSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = FocusSession
-        fields = '__all__'
-
+        fields = "__all__"
+        read_only_fields = ("user", "xp_earned", "created_at")
 
 class DailyMetricsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyMetrics
         fields = '__all__'
-
 
 class ReminderSerializer(serializers.ModelSerializer):
     class Meta:

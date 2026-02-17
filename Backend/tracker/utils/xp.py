@@ -14,3 +14,4 @@ def xp_progress(total_xp: int):
         "current_level_xp": total_xp,
         "xp_for_next_level": xp_needed
     }
+

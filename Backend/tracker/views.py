@@ -34,11 +34,14 @@ class HabitViewSet(ModelViewSet):
     def perform_create(self, serializer):
         difficulty = serializer.validated_data["habit_difficulty"]
         xp = DIFFICULTY_XP.get(difficulty, 10)
+        serializer.save(user=self.request.user, xp_reward=xp)
 
-        serializer.save(
-            user=self.request.user,
-            xp_reward=xp
-        )
+    def perform_update(self, serializer):
+        difficulty = serializer.validated_data.get("habit_difficulty")
+        if difficulty:
+            serializer.save(xp_reward=DIFFICULTY_XP.get(difficulty, 10))
+        else:
+            serializer.save()
 
 class TaskViewSet(ModelViewSet):
     serializer_class = TaskSerializer
@@ -90,12 +93,6 @@ class SubTaskViewSet(ModelViewSet):
             "id": subtask.id,
             "is_completed": subtask.is_completed
         })
-
-
-class FocusSessionViewSet(ModelViewSet):
-    queryset = FocusSession.objects.all()
-    serializer_class = FocusSessionSerializer
-
 
 class DailyMetricsViewSet(ModelViewSet):
     queryset = DailyMetrics.objects.all()
@@ -265,3 +262,27 @@ def toggle_subtask(request, subtask_id):
 
     except SubTask.DoesNotExist:
         return Response({"error": "Subtask not found"}, status=404)
+
+class FocusSessionViewSet(ModelViewSet):
+    queryset = FocusSession.objects.all()
+    serializer_class = FocusSessionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return FocusSession.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        duration = serializer.validated_data["duration_minutes"]
+        sessions = serializer.validated_data["sessions_completed"]
+
+        xp = duration * sessions
+
+        # ✅ Get the user's profile properly
+        profile = UserProfile.objects.get(user=self.request.user)
+
+        # ✅ Use your existing XP system
+        profile.add_xp(xp)
+
+        # ✅ Save the focus session
+        serializer.save(user=self.request.user, xp_earned=xp)
+

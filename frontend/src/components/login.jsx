@@ -14,18 +14,13 @@ const Login = () => {
     setError("");
 
     try {
-      const data = await login(username, password);
-
-      // Store tokens
-      localStorage.setItem("accessToken", data.access);
-      localStorage.setItem("refreshToken", data.refresh);
-
-      // Go to dashboard
+      await login(username, password);
       navigate("/");
     } catch (err) {
       setError("Invalid username or password");
     }
   };
+
 
   return (
     <div style={styles.container}>
