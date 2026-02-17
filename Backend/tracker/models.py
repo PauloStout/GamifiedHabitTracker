@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-
 # -----------------------------
 # USER PROFILE (extends Django User)
 # -----------------------------
@@ -98,13 +97,13 @@ class SubTask(models.Model):
 # -----------------------------
 class FocusSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    motivation_snapshot = models.CharField(max_length=255, blank=True)
-    session_minutes = models.IntegerField()
-    xp_reward = models.IntegerField(default=0)
-    completed_at = models.DateTimeField(auto_now_add=True)
+    duration_minutes = models.IntegerField()
+    sessions_completed = models.IntegerField(default=1)
+    xp_earned = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.first_name} - {self.session_minutes} mins"
+        return f"{self.user.username} - {self.duration_minutes}min x{self.sessions_completed}"
 
 
 # -----------------------------
@@ -196,5 +195,6 @@ class UserPod(models.Model):
 
     class Meta:
         unique_together = ("user", "pod")
+
 
 

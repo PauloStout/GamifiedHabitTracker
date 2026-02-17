@@ -102,3 +102,9 @@ export const toggleSubtask = async (subtaskId) => {
   const res = await privateApi.post(`subtasks/${subtaskId}/toggle/`);
   return res.data;
 };
+
+export const createFocusSession = async (data) => {
+  const res = await privateApi.post("focus-sessions/", data);
+  return res.data;
+};
+

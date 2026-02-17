@@ -12,6 +12,7 @@ import {
 
 import CreateHabitModal from "./CreateHabitModal";
 import CreateTaskModal from "./CreateTaskModal";
+import FocusSession from "./FocusSession.jsx";
 import "./dashboard.css";
 
 function Dashboard() {
@@ -22,6 +23,8 @@ function Dashboard() {
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [editingHabit, setEditingHabit] = useState(null);
+  const [showFocus, setShowFocus] = useState(false);
 
   const loadDashboard = async () => {
     try {
@@ -95,6 +98,17 @@ function Dashboard() {
         </p>
       </div>
 
+      {/* FOCUS SESSION */}
+      {showFocus ? (
+        <FocusSession onExit={() => setShowFocus(false)} />
+      ) : (
+        <div>
+          <button onClick={() => setShowFocus(true)}>
+            Start Focus Session
+          </button>
+        </div>
+      )}
+
       {/* XP / LEVEL */}
       <div className="xp-card">
         <p className="level">Level {dashboard.level}</p>
@@ -143,6 +157,15 @@ function Dashboard() {
               <button className="delete-btn" onClick={() => handleDeleteHabit(habit.id)}>
                 Delete
               </button>
+              <button
+                className="edit-btn"
+                onClick={() => {
+                  setEditingHabit(habit);   // set this habit as the one we are editing
+                  setShowCreateModal(true); // open the modal
+                }}
+              >
+                Edit
+              </button>
             </div>
           </div>
         ))}
@@ -151,13 +174,24 @@ function Dashboard() {
       {/* CREATE HABIT MODAL */}
       {showCreateModal && (
         <CreateHabitModal
-          onClose={() => setShowCreateModal(false)}
+          habit={editingHabit} // if null, modal is in "create" mode
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingHabit(null); // clear editing habit when closed
+          }}
           onCreated={() => {
             setShowCreateModal(false);
             loadHabits();
           }}
+          onUpdated={(updatedHabit) => {
+            // replace the updated habit in state
+            setHabits((prev) =>
+              prev.map((h) => (h.id === updatedHabit.id ? updatedHabit : h))
+            );
+          }}
         />
       )}
+
 
       {/* TASKS */}
       <div className="tasks-section">
@@ -285,6 +319,8 @@ function Dashboard() {
             }}
           />
         )}
+          <>
+    </>
       </div>
     </div>
   );
