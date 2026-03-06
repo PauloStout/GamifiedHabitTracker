@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { fetchLeaderboard } from "../api/api";
+import "./Social.css";
 
 export default function Social() {
   const [type, setType] = useState("xp");
@@ -18,46 +19,62 @@ export default function Social() {
     loadLeaderboard();
   }, [loadLeaderboard]);
 
-  // Function to get background color by rank
   const getBackgroundColor = (index) => {
     switch (index) {
-      case 0: return "#FFD700"; // Gold
-      case 1: return "#C0C0C0"; // Silver
-      case 2: return "#CD7F32"; // Bronze
-      default: return "#E0E0E0"; // Light Grey for others
+      case 0: return "#FFD700";
+      case 1: return "#C0C0C0";
+      case 2: return "#CD7F32";
+      default: return "#E0E0E0";
     }
   };
 
+  const getMedal = (index) => {
+    if (index === 0) return "🥇";
+    if (index === 1) return "🥈";
+    if (index === 2) return "🥉";
+    return null;
+  };
+
   return (
-    <div style={{ padding: "20px", paddingBottom: "80px" }}>
-      <h1>Leaderboard</h1>
+    <div className="social-page page-container">
+      <h1>Social</h1>
+
+      <div className="leaderboard-heading">🏆 Weekly Leaderboard</div>
 
       <select
+        className="leaderboard-select"
         value={type}
         onChange={(e) => setType(e.target.value)}
-        style={{ marginBottom: "20px" }}
       >
         <option value="xp">Weekly XP</option>
         <option value="streak">Top Streaks</option>
         <option value="focus">Weekly Focus Minutes</option>
       </select>
 
-      {leaders.map((user, index) => (
-        <div
-          key={index}
-          style={{
-            padding: "12px",
-            marginBottom: "8px",
-            background: getBackgroundColor(index),
-            borderRadius: "8px",
-            color: index > 2 ? "#555" : "#000", // Dark grey text for others
-            fontWeight: index < 3 ? "bold" : "normal",
-          }}
-        >
-          <strong>{index + 1}. {user.name}</strong>
-          <span style={{ float: "right" }}>{user.value}</span>
-        </div>
-      ))}
+      <div className="leaderboard-list">
+        {leaders.map((user, index) => (
+          <div
+            key={index}
+            className="leaderboard-row"
+            style={{
+              background: getBackgroundColor(index),
+              fontWeight: index < 3 ? "bold" : "normal",
+              color: index > 2 ? "#555" : "#000",
+            }}
+          >
+            <span className="leaderboard-rank">{index + 1}.</span>
+            {getMedal(index) && (
+              <span className="leaderboard-medal">{getMedal(index)}</span>
+            )}
+            <div className="leaderboard-avatar">👤</div>
+            <div className="leaderboard-user-info">
+              <div className="leaderboard-user-name">{user.name}</div>
+              <div className="leaderboard-user-sub">Level {user.level || "?"}</div>
+            </div>
+            <span className="leaderboard-value">{user.value}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

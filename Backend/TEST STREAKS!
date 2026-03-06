@@ -1,3 +1,5 @@
+python manage.py shell
+
 from tracker.models import Habit
 from django.utils import timezone
 from datetime import timedelta

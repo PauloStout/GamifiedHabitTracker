@@ -1,7 +1,6 @@
 from datetime import timedelta
-
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from rest_framework.decorators import api_view, permission_classes, action
@@ -330,16 +329,22 @@ def leaderboard_view(request):
     start_week = today - timedelta(days=6)
 
     if board_type == "xp":
+        # We need to fetch the level from the user's profile
         results = (
             DailyMetrics.objects
             .filter(metric_date__gte=start_week)
-            .values("user__first_name")
+            # We add 'user__userprofile__level' to the values we pull
+            .values("user__first_name", "user__userprofile__level")
             .annotate(total=Sum("xp_earned"))
             .order_by("-total")[:10]
         )
 
         data = [
-            {"name": r["user__first_name"], "value": r["total"] or 0}
+            {
+                "name": r["user__first_name"],
+                "level": r["user__userprofile__level"], # Added this
+                "value": r["total"] or 0
+            }
             for r in results
         ]
 
@@ -347,13 +352,17 @@ def leaderboard_view(request):
         results = (
             DailyMetrics.objects
             .filter(metric_date__gte=start_week)
-            .values("user__first_name")
+            .values("user__first_name", "user__userprofile__level") # Added level here too
             .annotate(total=Sum("total_study_minutes"))
             .order_by("-total")[:10]
         )
 
         data = [
-            {"name": r["user__first_name"], "value": r["total"] or 0}
+            {
+                "name": r["user__first_name"],
+                "level": r["user__userprofile__level"], # Added this
+                "value": r["total"] or 0
+            }
             for r in results
         ]
 
@@ -368,6 +377,7 @@ def leaderboard_view(request):
         data = [
             {
                 "name": p.user.first_name,
+                "level": p.level, # Added this (p is a UserProfile object)
                 "value": max([h.current_streak for h in p.user.habits.all()] or [0])
             }
             for p in profiles
@@ -377,8 +387,6 @@ def leaderboard_view(request):
         return Response({"error": "Invalid leaderboard type"}, status=400)
 
     return Response(data)
-
-from django.db.models import Sum
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -413,3 +421,94 @@ def user_progress(request):
         })
 
     return Response(data)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_achievements(request):
+    user = request.user
+
+    try:
+        profile = UserProfile.objects.get(user=user)
+    except UserProfile.DoesNotExist:
+        return Response({"error": "Profile not found"}, status=404)
+
+    # 1. Define Standard Achievements
+    standard_achievements = [
+        {"name": "Novice Explorer", "desc": "Reach Level 2", "xp": 50, "icon": "🌟"},
+        {"name": "Adept", "desc": "Reach Level 5", "xp": 100, "icon": "⭐"},
+        {"name": "XP Hoarder", "desc": "Accumulate 1000 Total XP", "xp": 200, "icon": "💰"},
+        {"name": "Streak Starter", "desc": "Achieve a 3-day habit streak", "xp": 50, "icon": "🔥"},
+        {"name": "Consistency Key", "desc": "Achieve a 7-day habit streak", "xp": 150, "icon": "📅"},
+        {"name": "Focus Initiate", "desc": "Log 60 minutes of focus time", "xp": 50, "icon": "🧠"},
+        {"name": "Deep Worker", "desc": "Log 300 minutes of focus time", "xp": 150, "icon": "🧘"},
+    ]
+
+    # Create them in the DB if they don't exist
+    for ach_data in standard_achievements:
+        Achievement.objects.get_or_create(
+            achievement_name=ach_data["name"],
+            defaults={
+                "description": ach_data["desc"],
+                "xp_reward": ach_data["xp"],
+                "icon_url": ach_data["icon"]
+            }
+        )
+
+    # 2. Calculate User Stats for Evaluation
+    max_streak_dict = Habit.objects.filter(user=user).aggregate(Max('longest_streak'))
+    max_streak = max_streak_dict['longest_streak__max'] or 0
+
+    total_focus_dict = DailyMetrics.objects.filter(user=user).aggregate(Sum('total_study_minutes'))
+    total_focus = total_focus_dict['total_study_minutes__sum'] or 0
+
+    # 3. Evaluate and Award
+    all_achievements = Achievement.objects.all()
+    unlocked_ids = set(UserAchievement.objects.filter(user=user).values_list('achievement_id', flat=True))
+
+    newly_unlocked = []
+
+    for ach in all_achievements:
+        if ach.id in unlocked_ids:
+            continue  # Already unlocked
+
+        # Check conditions
+        earned = False
+        if ach.achievement_name == "Novice Explorer" and profile.level >= 2:
+            earned = True
+        elif ach.achievement_name == "Adept" and profile.level >= 5:
+            earned = True
+        elif ach.achievement_name == "XP Hoarder" and profile.total_xp >= 1000:
+            earned = True
+        elif ach.achievement_name == "Streak Starter" and max_streak >= 3:
+            earned = True
+        elif ach.achievement_name == "Consistency Key" and max_streak >= 7:
+            earned = True
+        elif ach.achievement_name == "Focus Initiate" and total_focus >= 60:
+            earned = True
+        elif ach.achievement_name == "Deep Worker" and total_focus >= 300:
+            earned = True
+
+        if earned:
+            UserAchievement.objects.create(user=user, achievement=ach)
+            profile.add_xp(ach.xp_reward)  # Award XP for the achievement!
+            unlocked_ids.add(ach.id)
+            newly_unlocked.append(ach.achievement_name)
+
+    # 4. Format Data for React
+    data = []
+    for ach in all_achievements:
+        data.append({
+            "id": ach.id,
+            "name": ach.achievement_name,
+            "description": ach.description,
+            "icon": ach.icon_url,
+            "xp_reward": ach.xp_reward,
+            "unlocked": ach.id in unlocked_ids
+        })
+
+    return Response({
+        "achievements": data,
+        "newly_unlocked": newly_unlocked,
+        "total_xp": profile.total_xp,
+        "level": profile.level
+    })

@@ -118,3 +118,8 @@ export const fetchProgressData = async () => {
   const res = await privateApi.get("progress/");
   return res.data;
 };
+
+export const fetchAchievements = async () => {
+  const res = await privateApi.get("progress/achievements/");
+  return res.data;
+};

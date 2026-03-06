@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/api";
+import "./login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,7 +12,6 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     try {
       await login(username, password);
       navigate("/");
@@ -21,52 +20,56 @@ const Login = () => {
     }
   };
 
-
   return (
-    <div style={styles.container}>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <h2>Log in</h2>
+    <div className="login-page">
+      {/* Left: branding */}
+      <div className="login-left">
+        <div className="login-brand">
+          <div className="login-brand-name">KangaRoutine</div>
+          <div className="login-brand-tagline">Leap into Success!</div>
+        </div>
+      </div>
 
-        {error && <p style={styles.error}>{error}</p>}
+      {/* Right: form */}
+      <div className="login-right">
+        <div className="login-form-card">
+          <h2 className="login-title">Login</h2>
+          <p className="login-subtitle">Welcome Back!</p>
 
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        />
+          <button className="login-google-btn" type="button">
+            <span className="google-g">G</span>
+            Continue with Google
+          </button>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+          <div className="login-divider"><span>OR</span></div>
 
-        <button type="submit">Log in</button>
-      </form>
+          {error && <p className="login-error">{error}</p>}
+
+          <form onSubmit={handleSubmit}>
+            <input
+              className="login-input"
+              type="text"
+              placeholder="Email"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <input
+              className="login-input"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <button className="login-submit-btn" type="submit">
+              Continue
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  form: {
-    width: "300px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-  },
-  error: {
-    color: "red",
-  },
 };
 
 export default Login;

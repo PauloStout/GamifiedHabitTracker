@@ -4,21 +4,21 @@ import "./BottomNav.css";
 export default function BottomNav() {
   return (
     <nav className="bottom-nav">
-      <NavLink to="/dashboard" className="nav-item">
-        Dashboard 🏠
+      <NavLink to="/dashboard" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
+        <span className="nav-icon">🏠</span>
+        Dashboard
       </NavLink>
 
-      <NavLink to="/progress" className="nav-item">
-        Progress 📈
+      <NavLink to="/progress" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
+        <span className="nav-icon">📈</span>
+        Progress
       </NavLink>
 
-      <NavLink to="/social" className="nav-item">
-        Social 👥
+      <NavLink to="/social" className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}>
+        <span className="nav-icon">👥</span>
+        Social
       </NavLink>
 
-      <NavLink to="/settings" className="nav-item">
-        Settings ⚙️
-      </NavLink>
     </nav>
   );
 }
