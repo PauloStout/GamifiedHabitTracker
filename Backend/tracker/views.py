@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Max
+from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from rest_framework.decorators import api_view, permission_classes, action
@@ -165,10 +166,6 @@ class SocialPodViewSet(ModelViewSet):
 class UserPodViewSet(ModelViewSet):
     queryset = UserPod.objects.all()
     serializer_class = UserPodSerializer
-
-
-from django.http import JsonResponse
-from tracker.models import UserProfile
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])

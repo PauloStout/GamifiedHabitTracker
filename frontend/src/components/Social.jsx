@@ -37,9 +37,7 @@ export default function Social() {
 
   return (
     <div className="social-page page-container">
-      <h1>Social</h1>
-
-      <div className="leaderboard-heading">🏆 Weekly Leaderboard</div>
+      <h1><div className="leaderboard-heading">🏆 Weekly Leaderboard</div></h1>
 
       <select
         className="leaderboard-select"

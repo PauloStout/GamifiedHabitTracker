@@ -37,7 +37,7 @@ export default function Progress() {
 
   return (
     <div style={{ padding: "20px", paddingBottom: "80px", maxWidth: "1200px", margin: "0 auto" }}>
-      <h1 style={{ marginBottom: "20px" }}>Your Progress</h1>
+      <h1 style={{ marginBottom: "20px", color: "#1a1a1a" }}>Your Progress</h1>
 
       {/* ACHIEVEMENTS GRID */}
       <div style={{ marginBottom: "50px" }}>

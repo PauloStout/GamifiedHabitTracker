@@ -72,33 +72,18 @@ class UserProfile(models.Model):
 # -----------------------------
 class Habit(models.Model):
 
-    THEME_CHOICES = [
-        ("studies", "Studies"),
-        ("exercise", "Exercise"),
-        ("sleep", "Sleep"),
-        ("nutrition", "Nutrition"),
+    THEME_CHOICES = [("studies", "Studies"),("exercise", "Exercise"),("sleep", "Sleep"),("nutrition", "Nutrition"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="habits")
-
     habit_title = models.CharField(max_length=100)
     habit_notes = models.TextField(blank=True)
-
-    habit_theme = models.CharField(
-        max_length=50,
-        choices=THEME_CHOICES,
-        default="studies"
-    )
-
+    habit_theme = models.CharField(max_length=50,choices=THEME_CHOICES,default="studies")
     habit_difficulty = models.CharField(max_length=50)
     habit_frequency = models.CharField(max_length=50)  # daily, weekly
-
     xp_reward = models.IntegerField(default=0)
-
     is_completed = models.BooleanField(default=False)
     last_completed_date = models.DateField(null=True, blank=True)
-
-    # 🔥 STREAK SYSTEM
     current_streak = models.IntegerField(default=0)
     longest_streak = models.IntegerField(default=0)
 
