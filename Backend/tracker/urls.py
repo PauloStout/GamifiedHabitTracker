@@ -33,4 +33,5 @@ urlpatterns = [
     path('api/subtasks/<int:subtask_id>/toggle/', views.toggle_subtask, name='toggle-subtask'),
     path("leaderboard/", leaderboard_view),
     path("progress/", views.user_progress),
+    path("progress/achievements/", views.my_achievements),
 ]

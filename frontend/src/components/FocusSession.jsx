@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { createFocusSession } from "../api/api";
 
 export default function FocusSession({ onExit, onComplete }) {
@@ -13,44 +14,32 @@ export default function FocusSession({ onExit, onComplete }) {
 
   const totalSeconds = minutes * 60 + seconds;
 
-  // =========================
-  // TIMER LOGIC
-  // =========================
+  const adjustMinutes = (amount) => {
+    setMinutes((prev) => {
+      // Ensures we always jump to the next 5-minute block (e.g., 1 + 5 = 5, not 6)
+      const next = Math.max(5, Math.round((prev + amount) / 5) * 5);
+      setOriginalMinutes(next);
+      return next;
+    });
+  };
+
   useEffect(() => {
     let timer;
-
     const finishAllSessions = async () => {
       try {
         const response = await createFocusSession({
           duration_minutes: originalMinutes,
           sessions_completed: repeatCount,
         });
-
-        console.log("FOCUS RESPONSE:", response);
-
-        const xpEarned = response?.xp_earned ?? 0;
-
-        if (typeof onComplete === "function") {
-          await onComplete(xpEarned);
-        }
-
-        if (typeof onExit === "function") {
-          onExit();
-        }
-
-      } catch (err) {
-        console.error("Focus session save failed:", err);
-      }
+        if (onComplete) await onComplete(response?.xp_earned ?? 0);
+        if (onExit) onExit();
+      } catch (err) { console.error(err); }
     };
 
     if (isRunning && totalSeconds > 0) {
       timer = setInterval(() => {
         setSeconds(prev => {
-          if (prev === 0) {
-            if (minutes === 0) return 0;
-            setMinutes(m => m - 1);
-            return 59;
-          }
+          if (prev === 0) { setMinutes(m => m - 1); return 59; }
           return prev - 1;
         });
       }, 1000);
@@ -58,166 +47,65 @@ export default function FocusSession({ onExit, onComplete }) {
 
     if (isRunning && totalSeconds === 0) {
       clearInterval(timer);
-
-      // =========================
-      // FOCUS SESSION FINISHED
-      // =========================
       if (!isBreak) {
-        // Start break (5 min)
-        setIsBreak(true);
-        setMinutes(0);
-        setSeconds(0);
+        setIsBreak(true); setMinutes(5); setSeconds(0);
+      } else if (currentSession < repeatCount) {
+        setCurrentSession(prev => prev + 1); setIsBreak(false);
+        setMinutes(originalMinutes); setSeconds(0);
       } else {
-        // Break finished
-        if (currentSession < repeatCount) {
-          // Start next focus session
-          setCurrentSession(prev => prev + 1);
-          setIsBreak(false);
-          setMinutes(originalMinutes);
-          setSeconds(0);
-        } else {
-          // All sessions completed
-          setIsRunning(false);
-          finishAllSessions();
-        }
+        setIsRunning(false); finishAllSessions();
       }
     }
-
     return () => clearInterval(timer);
-  }, [
-    isRunning,
-    seconds,
-    minutes,
-    totalSeconds,
-    isBreak,
-    currentSession,
-    repeatCount,
-    originalMinutes,
-    onComplete,
-    onExit
-  ]);
+  }, [isRunning, totalSeconds, isBreak, currentSession, repeatCount, originalMinutes, onComplete, onExit]);
 
-  // =========================
-  // HELPERS
-  // =========================
-  const formatTime = () =>
-    `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  const formatTime = () => `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-  const start = () => setIsRunning(true);
-  const pause = () => setIsRunning(false);
+  const content = (
+    <div className={(fullscreen && isRunning) ? "focus-fs-overlay" : "focus-card-mini"}>
+      <div className="focus-inner">
+        <h3 className="focus-status-text">{isBreak ? "Break Time ☕" : ""}</h3>
 
-  const cancel = () => {
-    setIsRunning(false);
-    if (typeof onExit === "function") {
-      onExit();
-    }
-  };
+        <div className="focus-main-circle">
+          {!isRunning && (
+            <button className="timer-nav up" onClick={() => adjustMinutes(5)}>▲</button>
+          )}
 
-  // =========================
-  // STYLES
-  // =========================
-  const containerStyle = fullscreen
-    ? {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "#111",
-        color: "white",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999
-      }
-    : { padding: 20 };
+          <div className="timer-digits">
+            {formatTime()}
+          </div>
 
-  // =========================
-  // RENDER
-  // =========================
-  return (
-    <div style={containerStyle}>
-      <h2>{isBreak ? "Break Time ☕" : "Focus Session"}</h2>
+          {!isRunning && (
+            <button className="timer-nav down" onClick={() => adjustMinutes(-5)}>▼</button>
+          )}
+        </div>
 
-      {/* SETTINGS (before start only) */}
-      {!isRunning && !isBreak && (
-        <>
-          <div style={{ marginBottom: 10 }}>
-            <button
-              onClick={() => {
-                setMinutes(m => {
-                  const newValue = m + 1;
-                  setOriginalMinutes(newValue);
-                  return newValue;
-                });
-              }}
-            >
-              +
+        <div className="focus-controls-area">
+          {!isRunning && (
+            <div className="focus-config-row">
+              <div className="rounds-input">
+                <span>Rounds:</span>
+                <input type="number" value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Number(e.target.value)))} />
+              </div>
+              <label className="fs-toggle-compact">
+                <input type="checkbox" checked={fullscreen} onChange={() => setFullscreen(!fullscreen)} />
+                <span>Fullscreen</span>
+              </label>
+            </div>
+          )}
+
+          <div className="focus-btn-row">
+            <button className="focus-start-pause" onClick={() => setIsRunning(!isRunning)}>
+              {isRunning ? "PAUSE" : "START"}
             </button>
-
-            <button
-              onClick={() => {
-                setMinutes(m => {
-                  const newValue = Math.max(1, m - 1);
-                  setOriginalMinutes(newValue);
-                  return newValue;
-                });
-              }}
-              style={{ marginLeft: 10 }}
-            >
-              -
-            </button>
+            <button className="focus-exit-btn" onClick={onExit}>EXIT</button>
           </div>
 
-          <div style={{ marginBottom: 10 }}>
-            <label>
-              How many sessions?{" "}
-              <input
-                type="number"
-                min="1"
-                value={repeatCount}
-                onChange={(e) =>
-                  setRepeatCount(Math.max(1, Number(e.target.value)))
-                }
-                style={{ width: 60 }}
-              />
-            </label>
-          </div>
-
-          <div>
-            <label>
-              Fullscreen?
-              <input
-                type="checkbox"
-                checked={fullscreen}
-                onChange={() => setFullscreen(!fullscreen)}
-                style={{ marginLeft: 8 }}
-              />
-            </label>
-          </div>
-        </>
-      )}
-
-      {/* TIMER DISPLAY */}
-      <h1 style={{ fontSize: 60, margin: 20 }}>{formatTime()}</h1>
-
-      {/* CONTROLS */}
-      {!isRunning ? (
-        <button onClick={start} style={{ fontSize: 20 }}>
-          ▶️ Start
-        </button>
-      ) : (
-        <button onClick={pause}>Pause</button>
-      )}
-
-      <button onClick={cancel} style={{ marginTop: 20 }}>
-        Cancel
-      </button>
-
-      <p style={{ marginTop: 15 }}>
-        Session {currentSession} of {repeatCount}
-      </p>
+          {isRunning && <span className="session-progress">Round {currentSession} / {repeatCount}</span>}
+        </div>
+      </div>
     </div>
   );
+
+  return (fullscreen && isRunning) ? createPortal(content, document.body) : content;
 }

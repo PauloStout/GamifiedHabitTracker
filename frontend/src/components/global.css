@@ -1,0 +1,125 @@
+/* =============================================
+   KANGAROUTINE - Global Styles
+   ============================================= */
+
+:root {
+  /* Colors */
+  --color-bg: #ff0000;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-text: #1a1a1a;
+  --color-text-muted: #939191;
+  --color-border: #333333;
+
+  /* Card backgrounds */
+  --color-card: #958d8d;
+  --color-card-inner: #c3c2c2;
+  --color-nav: #9c7c7c;
+
+  /* Theme accent colors */
+  --color-studies: #4684ff;
+  --color-exercise: #34c759;
+  --color-sleep: #d33f3f;
+  --color-nutrition: #ff9500;
+
+  /* Button colors */
+  --color-btn-primary: #000000;
+  --color-btn-cancel: #e53e3e;
+  --color-btn-save: #38a169;
+
+  /* Leaderboard */
+  --color-gold: #FFD700;
+  --color-silver: #C0C0C0;
+  --color-bronze: #CD7F32;
+  --color-self: #e9d8fd;
+
+  /* Typography */
+  --font-main: 'Nunito', sans-serif;
+  --font-display: 'Poppins', sans-serif;
+
+  /* Spacing */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 25px;
+  --radius-pill: 50px;
+
+  /* Nav height */
+  --nav-height: 70px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-main), serif;
+  background-color: var(--color-bg);
+  color: var(--color-black);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  color: var(--color-black);
+}
+
+input, textarea, select, button {
+  font-family: var(--font-main), serif;
+}
+
+button {
+  color: var(--color-black);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+input, textarea, select {
+  outline: none;
+  border: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Page container */
+.page-container {
+  padding: 24px 24px 90px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Loading / Error states */
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+}
+.error {
+  color: #e53e3e;
+}

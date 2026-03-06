@@ -1,0 +1,227 @@
+/* =============================================
+   MODALS (CreateHabitModal & CreateTaskModal)
+   ============================================= */
+
+/* Overlay backdrop */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal card */
+.modal {
+  background: white;
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal header - dark band */
+.modal-header {
+  background: var(--color-black);
+  color: white;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3,
+.modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: black;
+}
+
+.modal-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-cancel-btn {
+  background: #e53e3e;
+  border: none;
+  color: white;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.modal-cancel-btn:hover {
+  opacity: 0.85;
+}
+
+.modal-save-btn {
+  background: #38a169;
+  color: white;
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.modal-save-btn:hover {
+  opacity: 0.85;
+}
+
+/* Modal body */
+.modal-body {
+  padding: 24px;
+}
+
+/* Field label */
+.modal-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.modal-label:first-child {
+  margin-top: 0;
+}
+
+/* Input / Textarea / Select */
+.modal-input,
+.modal-textarea,
+.modal-select {
+  width: 100%;
+  background: #e8e8e8;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  font-size: 1rem;
+  color: var(--color-text);
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.modal-input:focus,
+.modal-textarea:focus,
+.modal-select:focus {
+  border-color: var(--color-black);
+  background: white;
+  outline: none;
+}
+
+.modal-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.modal-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23333' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* Subtasks */
+.subtask-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.subtask-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #e8e8e8;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.subtask-drag-icon {
+  color: #aaa;
+  font-size: 1rem;
+  cursor: grab;
+}
+
+.subtask-input-row input {
+  flex: 1;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  border: none;
+  outline: none;
+}
+
+.add-subtask-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s;
+}
+
+.add-subtask-btn:hover {
+  opacity: 0.7;
+}
+
+/* Difficulty stars / dropdown */
+.difficulty-select-wrapper {
+  position: relative;
+}
+
+/* Preset picker */
+.preset-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+/* Full-width create button (fallback if no header buttons) */
+.modal-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--color-black);
+  color: white;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 1rem;
+  margin-top: 20px;
+  transition: opacity 0.2s;
+}
+
+.modal-submit-btn:hover {
+  opacity: 0.85;
+}
+

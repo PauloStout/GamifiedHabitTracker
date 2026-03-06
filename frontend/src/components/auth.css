@@ -1,0 +1,138 @@
+/* src/components/auth.css */
+h1, p{
+  color: white
+}
+
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* --- Left Side (50%) --- */
+.auth-left {
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.auth-left::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.auth-brand-overlay {
+  text-align: center;
+  color: #000000;
+  z-index: 2;
+}
+
+.auth-mascot {
+  width: 200px;
+  height: auto;
+  margin-bottom: 15px;
+}
+
+.auth-brand-name {
+  font-family: var(--font-display, sans-serif);
+  font-size: 3rem;
+  font-weight: 800;
+  margin: 0;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.auth-brand-tagline {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-top: 5px;
+  text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+/* --- Right Side (50%) --- */
+.auth-right {
+  flex: 1;
+  background-color: #d9d9d9; /* Grey background from design */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+}
+
+.auth-title {
+  font-family: var(--font-display, sans-serif);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 5px;
+}
+
+.auth-subtitle {
+  font-size: 1.1rem;
+  color: #444;
+  margin-bottom: 30px;
+}
+
+/* Form Elements */
+.auth-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  margin-top: 15px;
+  color: #333;
+}
+
+.auth-input, .auth-textarea, .auth-select {
+  width: 100%;
+  padding: 14px;
+  background: #ececec;
+  border: 1px solid #bbb;
+  border-radius: 12px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.auth-input:focus, .auth-textarea:focus, .auth-select:focus {
+  outline: 2px solid #000;
+  background: white;
+}
+
+/* Black Pill Button */
+.auth-btn {
+  width: 100%;
+  padding: 16px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: transform 0.1s;
+}
+
+.auth-btn:active {
+  transform: scale(0.98);
+}
+
+/* Responsive */
+@media (max-width: 850px) {
+  .auth-page { flex-direction: column; }
+  .auth-left { min-height: 40vh; }
+  .auth-right { padding: 40px 20px; }
+}

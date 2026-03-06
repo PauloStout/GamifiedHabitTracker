@@ -1,0 +1,251 @@
+/* =============================================
+   SETTINGS PAGE
+   ============================================= */
+
+.settings-page {
+  padding: 24px 24px 90px;
+  background: white;
+  min-height: 100vh;
+  max-width: 800px;
+}
+
+.settings-page h1 {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: var(--color-text);
+  margin-bottom: 24px;
+}
+
+/* Profile card */
+.settings-profile-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 0 20px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 24px;
+}
+
+.settings-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.settings-profile-info {
+  flex: 1;
+}
+
+.settings-profile-name {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.settings-profile-sub {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.settings-profile-email {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-top: 6px;
+}
+
+.settings-profile-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.settings-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.settings-more-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+/* Section card */
+.settings-section {
+  border: 1.5px solid #e8e8e8;
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.settings-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 20px;
+}
+
+.settings-section-title .section-icon {
+  font-size: 1.1rem;
+  color: var(--color-studies);
+}
+
+/* Settings row (toggle + label) */
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.settings-row:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-row-info h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.settings-row-info p {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #ccc;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  top: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle input:checked + .toggle-slider {
+  background: var(--color-text);
+}
+
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Reminder text input */
+.settings-reminder-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 16px;
+  background: #e8e8e8;
+  border-radius: var(--radius-pill);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  border: none;
+  outline: none;
+  margin-top: 12px;
+}
+
+.settings-reminder-input::placeholder {
+  color: #888;
+}
+
+/* Theme switcher */
+.settings-theme-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.settings-theme-option {
+  flex: 1;
+  padding: 20px;
+  background: white;
+  border: 1.5px solid #e0e0e0;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  max-width: 180px;
+}
+
+.settings-theme-option.selected {
+  border-color: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-text);
+}
+
+.settings-theme-option .theme-icon {
+  font-size: 1.8rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .settings-page {
+    padding: 20px 16px 90px;
+  }
+  .settings-section {
+    padding: 16px;
+  }
+}
