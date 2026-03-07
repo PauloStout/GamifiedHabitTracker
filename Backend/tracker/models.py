@@ -53,15 +53,12 @@ class UserProfile(models.Model):
     def add_xp(self, xp):
         if not self.xp_enabled:
             return
-
         self.total_xp += xp
         self.current_level_xp += xp
-
         while self.current_level_xp >= self.xp_for_next_level:
             self.current_level_xp -= self.xp_for_next_level
             self.level += 1
             self.xp_for_next_level = int(self.xp_for_next_level * 1.25)
-
         self.save()
 
     def __str__(self):
@@ -71,7 +68,6 @@ class UserProfile(models.Model):
 # HABITS
 # -----------------------------
 class Habit(models.Model):
-
     THEME_CHOICES = [("studies", "Studies"),("exercise", "Exercise"),("sleep", "Sleep"),("nutrition", "Nutrition"),
     ]
 
@@ -87,22 +83,15 @@ class Habit(models.Model):
     current_streak = models.IntegerField(default=0)
     longest_streak = models.IntegerField(default=0)
 
-    def should_reset(self):
-        if self.habit_frequency == "daily":
-            if self.last_completed_date:
-                return self.last_completed_date < timezone.now().date()
-        return False
-
     def update_streak(self):
         today = timezone.now().date()
-
         if self.last_completed_date == today:
             return  # already counted today
 
         yesterday = today - timezone.timedelta(days=1)
 
         if self.last_completed_date == yesterday:
-            self.current_streak += 1
+            self.current_streak += 1 # consecutive day
         else:
             self.current_streak = 1  # restart streak
 
@@ -111,6 +100,12 @@ class Habit(models.Model):
 
         self.last_completed_date = today
         self.save()
+
+    def should_reset(self):
+        if self.habit_frequency == "daily":
+            if self.last_completed_date:
+                return self.last_completed_date < timezone.now().date()
+        return False
 
     def __str__(self):
         return self.habit_title
@@ -170,6 +165,7 @@ class FocusSession(models.Model):
     xp_earned = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
+#backend - tracker/models.py
     def __str__(self):
         return f"{self.user.username} - {self.duration_minutes}min x{self.sessions_completed}"
 

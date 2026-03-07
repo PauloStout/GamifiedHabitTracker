@@ -62,6 +62,7 @@ export const fetchHabits = async () => {
   return res.data;
 };
 
+// api.jsx
 export const createHabit = async (habit) => {
   const res = await privateApi.post("habits/", habit);
   return res.data;

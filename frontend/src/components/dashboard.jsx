@@ -139,9 +139,7 @@ function Dashboard() {
       const updatedDashboard = await loadDashboard();
       const xpEarned = updatedHabit.xp_awarded;
 
-      let mascot;
-      let message;
-
+      let mascot, message;
       switch (habitTheme) {
         case "studies": mascot = StudyMascot; message = `Study streak continues! 📚 +${xpEarned} XP`; break;
         case "nutrition": mascot = NutritionMascot; message = `Healthy choice! 🥗 +${xpEarned} XP`; break;
@@ -154,7 +152,6 @@ function Dashboard() {
         mascot = CheeringMascot;
         message = `LEVEL UP! 🎉 You reached level ${updatedDashboard.level}! +${xpEarned} XP`;
       }
-
       setMascotSrc(mascot);
       setMascotMessage(message);
       setHabits((prev) => prev.map((h) => h.id === habitId ? { ...h, is_completed: true, streak: updatedHabit.streak } : h));
@@ -284,6 +281,7 @@ function Dashboard() {
               <FocusSession
                 key={focusKey}
                 onExit={() => setFocusKey(k => k + 1)}
+                motivation={dashboard.motivation}
                 onComplete={async (xpFromBackend) => {
                   const updated = await loadDashboard();
                   setMascotSrc(updated.level > dashboard.level ? CheeringMascot : FocusMascot);

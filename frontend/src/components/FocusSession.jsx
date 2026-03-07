@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { createFocusSession } from "../api/api";
 
-export default function FocusSession({ onExit, onComplete }) {
+
+export default function FocusSession({ onExit, onComplete, motivation }) {
   const [minutes, setMinutes] = useState(25);
   const [seconds, setSeconds] = useState(0);
   const [repeatCount, setRepeatCount] = useState(1);
@@ -16,7 +17,6 @@ export default function FocusSession({ onExit, onComplete }) {
 
   const adjustMinutes = (amount) => {
     setMinutes((prev) => {
-      // Ensures we always jump to the next 5-minute block (e.g., 1 + 5 = 5, not 6)
       const next = Math.max(5, Math.round((prev + amount) / 5) * 5);
       setOriginalMinutes(next);
       return next;
@@ -47,12 +47,12 @@ export default function FocusSession({ onExit, onComplete }) {
 
     if (isRunning && totalSeconds === 0) {
       clearInterval(timer);
-      if (!isBreak) {
+      if (!isBreak) { //session ended, start break
         setIsBreak(true); setMinutes(5); setSeconds(0);
-      } else if (currentSession < repeatCount) {
+      } else if (currentSession < repeatCount) { //break ended, start next session
         setCurrentSession(prev => prev + 1); setIsBreak(false);
         setMinutes(originalMinutes); setSeconds(0);
-      } else {
+      } else { //all sessions completed, send to backend
         setIsRunning(false); finishAllSessions();
       }
     }
@@ -65,7 +65,11 @@ export default function FocusSession({ onExit, onComplete }) {
     <div className={(fullscreen && isRunning) ? "focus-fs-overlay" : "focus-card-mini"}>
       <div className="focus-inner">
         <h3 className="focus-status-text">{isBreak ? "Break Time ☕" : ""}</h3>
-
+          {(fullscreen && isRunning) && (
+            <p style={{textAlign: "center", fontSize: "1.1rem", fontStyle: "italic", color: "black", marginBottom: "20px", padding: "0 40px"}}>
+              {motivation || "What drives you today?"}
+            </p>
+          )}
         <div className="focus-main-circle">
           {!isRunning && (
             <button className="timer-nav up" onClick={() => adjustMinutes(5)}>▲</button>

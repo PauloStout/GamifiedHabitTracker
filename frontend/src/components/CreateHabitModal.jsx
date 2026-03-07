@@ -46,15 +46,10 @@ export default function CreateHabitModal({ onClose, onCreated, habit, onUpdated 
     }
   }, [habit]);
 
+  //CreateHabitModal.jsx
   const submit = async () => {
     try {
-      const payload = {
-        habit_title: title,
-        habit_notes: notes,
-        habit_difficulty: difficulty,
-        habit_frequency: "daily",
-        habit_theme: theme,
-      };
+      const payload = {habit_title: title, habit_notes: notes, habit_difficulty: difficulty, habit_frequency: "daily", habit_theme: theme,};
 
       if (habit && onUpdated) {
         const res = await privateApi.put(`habits/${habit.id}/`, payload);

@@ -233,27 +233,17 @@ def complete_habit(request, habit_id):
     try:
         habit = Habit.objects.get(id=habit_id, user=request.user)
         today = timezone.now().date()
-
         if habit.last_completed_date != today:
             habit.is_completed = True
             habit.update_streak()
-
             xp_awarded, profile = award_xp(
                 request.user,
                 base_xp=habit.xp_reward,
                 obj_theme=habit.habit_theme
             )
-
-            # ✅ UPDATE WEEKLY XP ONLY
             update_daily_xp(user=request.user, xp=xp_awarded)
-
-        return JsonResponse({
-            "xp_awarded": xp_awarded,
-            "total_xp": profile.total_xp,
-            "level": profile.level,
-            "habit_id": habit.id,
-            "is_completed": habit.is_completed
-        })
+        return JsonResponse({"xp_awarded": xp_awarded, "total_xp": profile.total_xp,
+            "level": profile.level, "habit_id": habit.id, "is_completed": habit.is_completed})
 
     except Habit.DoesNotExist:
         return JsonResponse({"error": "Habit not found"}, status=404)

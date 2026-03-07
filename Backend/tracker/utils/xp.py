@@ -19,17 +19,6 @@ def xp_progress(total_xp: int):
     }
 
 def award_xp(user, base_xp, obj_theme=None):
-    """
-    Awards XP to a user, applying theme bonus if applicable.
-
-    Args:
-        user: Django User instance
-        base_xp: int, XP from the task/habit
-        obj_theme: str, the theme of the task/habit (optional)
-    Returns:
-        xp_awarded: int, actual XP awarded
-        profile: UserProfile instance
-    """
     profile = UserProfile.objects.get(user=user)
     xp_to_award = base_xp
 
