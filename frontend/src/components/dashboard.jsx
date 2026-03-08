@@ -29,11 +29,11 @@ import WavingMascot from "../assets/mascots/WavingMascot.png";
 import CheeringMascot from "../assets/mascots/CheeringMascot.png";
 
 // Helper component for the graph to keep logic clean
-function MiniProgress() {
+function MiniProgress({ refreshKey }) {
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchProgressData().then(setData).catch(err => console.error("Graph error:", err));
-  }, []);
+  }, [refreshKey]);
 
   return (
     <ResponsiveContainer width="100%" height={150}>
@@ -46,7 +46,7 @@ function MiniProgress() {
         />
         <Line
           type="monotone"
-          dataKey="weekly_xp"
+          dataKey="daily_xp"
           stroke="#4f86f7"
           strokeWidth={3}
           dot={{ r: 4, fill: '#4f86f7' }}
@@ -68,6 +68,7 @@ function Dashboard() {
   const [focusKey, setFocusKey] = useState(0);
   const [mascotSrc, setMascotSrc] = useState(null);
   const [mascotMessage, setMascotMessage] = useState("");
+  const [graphKey, setGraphKey] = useState(0);
 
   const loadDashboard = async () => {
     try {
@@ -152,9 +153,25 @@ function Dashboard() {
         mascot = CheeringMascot;
         message = `LEVEL UP! 🎉 You reached level ${updatedDashboard.level}! +${xpEarned} XP`;
       }
+
       setMascotSrc(mascot);
       setMascotMessage(message);
-      setHabits((prev) => prev.map((h) => h.id === habitId ? { ...h, is_completed: true, streak: updatedHabit.streak } : h));
+      setDashboard(updatedDashboard);
+
+      // ✅ FIX: use updatedHabit values, with fallback to keep existing streak if missing
+      setHabits((prev) =>
+        prev.map((h) =>
+          h.id === habitId
+            ? {
+                ...h,
+                is_completed: true,
+                current_streak: updatedHabit.current_streak ?? h.current_streak,
+              }
+            : h
+        )
+      );
+
+      setGraphKey((k) => k + 1);
     } catch {
       alert("Could not complete habit");
     }
@@ -203,7 +220,7 @@ function Dashboard() {
           {/* TOP LEFT: METRICS GRAPH */}
           <div className="dashboard-card metrics-box">
             <h2 className="section-title">Weekly Progress (XP)</h2>
-            <MiniProgress />
+            <MiniProgress refreshKey={graphKey} />
           </div>
 
           {/* BOTTOM LEFT ROW: TASKS & FOCUS */}

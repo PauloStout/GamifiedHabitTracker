@@ -34,4 +34,4 @@ def test_add_xp_to_user(user_id, xp_amount):
 
 
 if __name__ == "__main__":
-    test_add_xp_to_user(user_id=14, xp_amount=500)
+    test_add_xp_to_user(user_id=7, xp_amount=500)

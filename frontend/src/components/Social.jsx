@@ -20,20 +20,10 @@ export default function Social() {
   }, [loadLeaderboard]);
 
   const getBackgroundColor = (index) => {
-    switch (index) {
-      case 0: return "#FFD700";
-      case 1: return "#C0C0C0";
-      case 2: return "#CD7F32";
-      default: return "#E0E0E0";
-    }
-  };
+    switch (index) {case 0: return "#FFD700";case 1: return "#C0C0C0";case 2: return "#CD7F32";default: return "#E0E0E0";}};
 
-  const getMedal = (index) => {
-    if (index === 0) return "🥇";
-    if (index === 1) return "🥈";
-    if (index === 2) return "🥉";
-    return null;
-  };
+  const getMedal = (index) => {if (index === 0) return "🥇";if (index === 1) return "🥈";if (index === 2) return "🥉";
+    return null;};
 
   return (
     <div className="social-page page-container">

@@ -20,9 +20,8 @@ from .serializers import (
     AchievementSerializer, UserAchievementSerializer,
     SocialPodSerializer, UserPodSerializer, SubTaskSerializer
 )
-from .utils.xp import award_xp
-
 from .utils.metrics import update_daily_xp
+from .utils.xp import award_xp
 
 DIFFICULTY_XP = {
     "easy": 10,
@@ -177,8 +176,8 @@ def dashboard_data(request):
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
     try:
+        #tracker/views.py - dashboard_data
         profile = UserProfile.objects.select_related("user").get(user=request.user)
-
         data = {
             "first_name": profile.user.first_name,
             "last_name": profile.user.last_name,
@@ -227,23 +226,38 @@ def add_habit(request):
         "name": habit.name
     })
 
+
+# tracker/views.py
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def complete_habit(request, habit_id):
     try:
         habit = Habit.objects.get(id=habit_id, user=request.user)
         today = timezone.now().date()
+        xp_awarded = 0  # Default if already completed today
+
         if habit.last_completed_date != today:
             habit.is_completed = True
-            habit.update_streak()
+            habit.update_streak()  # This updates the streak in the DB
             xp_awarded, profile = award_xp(
                 request.user,
                 base_xp=habit.xp_reward,
                 obj_theme=habit.habit_theme
             )
             update_daily_xp(user=request.user, xp=xp_awarded)
-        return JsonResponse({"xp_awarded": xp_awarded, "total_xp": profile.total_xp,
-            "level": profile.level, "habit_id": habit.id, "is_completed": habit.is_completed})
+        else:
+            # If already completed, we still need profile for the response
+            profile = request.user.userprofile
+
+        return JsonResponse({
+            "xp_awarded": xp_awarded,
+            "total_xp": profile.total_xp,
+            "level": profile.level,
+            "habit_id": habit.id,
+            "is_completed": habit.is_completed,
+            "current_streak": habit.current_streak  # <-- ADD THIS LINE
+        })
 
     except Habit.DoesNotExist:
         return JsonResponse({"error": "Habit not found"}, status=404)
@@ -316,7 +330,6 @@ def leaderboard_view(request):
     start_week = today - timedelta(days=6)
 
     if board_type == "xp":
-        # We need to fetch the level from the user's profile
         results = (
             DailyMetrics.objects
             .filter(metric_date__gte=start_week)
@@ -402,7 +415,8 @@ def user_progress(request):
 
         data.append({
             "date": metric.metric_date.strftime("%d %b"),
-            "weekly_xp": weekly_xp,
+            "weekly_xp": weekly_xp, # Keeps the weekly sum in case you want it elsewhere
+            "daily_xp": metric.xp_earned, # <-- ADD THIS LINE
             "focus_minutes": metric.total_study_minutes,
             "streak": metric.habits_completed,
         })
@@ -441,14 +455,10 @@ def my_achievements(request):
             }
         )
 
-    # 2. Calculate User Stats for Evaluation
     max_streak_dict = Habit.objects.filter(user=user).aggregate(Max('longest_streak'))
     max_streak = max_streak_dict['longest_streak__max'] or 0
-
     total_focus_dict = DailyMetrics.objects.filter(user=user).aggregate(Sum('total_study_minutes'))
     total_focus = total_focus_dict['total_study_minutes__sum'] or 0
-
-    # 3. Evaluate and Award
     all_achievements = Achievement.objects.all()
     unlocked_ids = set(UserAchievement.objects.filter(user=user).values_list('achievement_id', flat=True))
 
@@ -456,25 +466,14 @@ def my_achievements(request):
 
     for ach in all_achievements:
         if ach.id in unlocked_ids:
-            continue  # Already unlocked
-
-        # Check conditions
-        earned = False
+            continue  #already unlocked
+        earned = False #checks achievement unlock
         if ach.achievement_name == "Novice Explorer" and profile.level >= 2:
             earned = True
         elif ach.achievement_name == "Adept" and profile.level >= 5:
             earned = True
         elif ach.achievement_name == "XP Hoarder" and profile.total_xp >= 1000:
             earned = True
-        elif ach.achievement_name == "Streak Starter" and max_streak >= 3:
-            earned = True
-        elif ach.achievement_name == "Consistency Key" and max_streak >= 7:
-            earned = True
-        elif ach.achievement_name == "Focus Initiate" and total_focus >= 60:
-            earned = True
-        elif ach.achievement_name == "Deep Worker" and total_focus >= 300:
-            earned = True
-
         if earned:
             UserAchievement.objects.create(user=user, achievement=ach)
             profile.add_xp(ach.xp_reward)  # Award XP for the achievement!

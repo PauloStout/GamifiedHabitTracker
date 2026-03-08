@@ -95,7 +95,7 @@ export default function Progress() {
                 <YAxis />
                 <Tooltip contentStyle={{ borderRadius: '8px', border: '2px solid black' }} />
                 <Legend />
-                <Line type="monotone" dataKey="weekly_xp" stroke="#4f86f7" strokeWidth={3} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="daily_xp" stroke="#4f86f7" strokeWidth={3} dot={{ r: 4 }} />
             </LineChart>
             </ResponsiveContainer>
         )}
