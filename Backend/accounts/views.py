@@ -14,14 +14,14 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
-            # Create JWT tokens immediately
+            #JWT token creation
             refresh = RefreshToken.for_user(user)
 
             return Response(
                 {
-                    "user_id": user.id,           # ✅ Add user ID
+                    "user_id": user.id,
                     "username": user.username,
-                    "email": user.email,           # optional
+                    "email": user.email,
                     "refresh": str(refresh),
                     "access": str(refresh.access_token),
                 },
@@ -30,10 +30,8 @@ class RegisterView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+#check if a username/email exists in the system.
 class CheckUserView(APIView):
-    """
-    Check if a username/email exists in the system.
-    """
     def post(self, request):
         username_or_email = request.data.get("username_or_email")
         if not username_or_email:
@@ -44,7 +42,6 @@ class CheckUserView(APIView):
 
         return Response({"exists": bool(user)})
 
-# accounts/views.py
 class CompleteProfileView(APIView):
     def post(self, request):
         user_id = request.data.get("user_id")

@@ -2,7 +2,7 @@ from tracker.models import UserProfile
 
 THEME_BONUS_MULTIPLIER = 1.5
 
-#Returns level based on total XP | increasing difficulty per level.
+#returns level based on total XP | increasing difficulty per level.
 def xp_progress(total_xp: int):
 
     level = 1

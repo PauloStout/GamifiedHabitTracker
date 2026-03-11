@@ -16,7 +16,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
         )
 
-        # Create profile automatically
+        #creates profile auto
         UserProfile.objects.create(user=user)
 
         return user

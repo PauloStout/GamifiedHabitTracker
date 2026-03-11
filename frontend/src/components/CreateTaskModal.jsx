@@ -4,7 +4,6 @@ import "./Modal.css";
 
 function CreateTaskModal({ onClose, onCreated }) {
   const [title, setTitle] = useState("");
-  const [notes, setNotes] = useState("");
   const [difficulty, setDifficulty] = useState("easy");
   const [subtasks, setSubtasks] = useState([""]);
   const [theme, setTheme] = useState("studies");
@@ -20,7 +19,6 @@ function CreateTaskModal({ onClose, onCreated }) {
   const handleSubmit = async () => {
     const payload = {
       task_title: title,
-      task_notes: notes,
       task_difficulty: difficulty,
       xp_reward: 25,
       task_theme: theme,
@@ -42,10 +40,6 @@ function CreateTaskModal({ onClose, onCreated }) {
       <div className="modal">
         <div className="modal-header">
           <h3>Create Task</h3>
-          <div className="modal-header-actions">
-            <button className="modal-cancel-btn" onClick={onClose}>Cancel</button>
-            <button className="modal-save-btn" onClick={handleSubmit}>Save</button>
-          </div>
         </div>
 
         <div className="modal-body">
@@ -57,13 +51,6 @@ function CreateTaskModal({ onClose, onCreated }) {
             onChange={(e) => setTitle(e.target.value)}
           />
 
-          <label className="modal-label">Notes</label>
-          <textarea
-            className="modal-textarea"
-            placeholder="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
 
           <label className="modal-label">Difficulty</label>
           <select className="modal-select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
@@ -96,6 +83,11 @@ function CreateTaskModal({ onClose, onCreated }) {
           <button className="add-subtask-btn" onClick={addSubtask}>
             + Add Element
           </button>
+        </div>
+
+        <div className="modal-footer">
+          <button className="modal-cancel-btn" onClick={onClose}>Cancel</button>
+          <button className="modal-save-btn" onClick={handleSubmit}>Save</button>
         </div>
       </div>
     </div>

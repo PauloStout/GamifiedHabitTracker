@@ -90,7 +90,7 @@ class FocusSessionTest(TestCase):
         self.assertEqual(metric.total_study_minutes, 25)
 
 
-# ── HABIT API ─────────────────────────────────────────────────────────────────
+#HABIT API
 
 class HabitAPITest(APITestCase):
 

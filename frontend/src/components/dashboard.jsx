@@ -113,7 +113,7 @@ function Dashboard() {
         setHabits(habitsData);
         setTasks(tasksData);
 
-        // Achievement Notification Logic
+        //Achievement Notifications
         if (achData.newly_unlocked && achData.newly_unlocked.length > 0) {
           const newUnlocks = achData.achievements.filter(ach =>
             achData.newly_unlocked.includes(ach.name)
@@ -158,7 +158,6 @@ function Dashboard() {
       setMascotMessage(message);
       setDashboard(updatedDashboard);
 
-      // ✅ FIX: use updatedHabit values, with fallback to keep existing streak if missing
       setHabits((prev) =>
         prev.map((h) =>
           h.id === habitId
@@ -263,7 +262,7 @@ function Dashboard() {
                       </div>
                     </div>
                     <div className="task-btns">
-                      <button className="complete-btn-small" disabled={task.is_completed} onClick={async () => {
+                      <button className="complete-btn" disabled={task.is_completed} onClick={async () => {
                         try {
                           const oldLevel = dashboard.level;
                           const updatedTask = await completeTask(task.id);
@@ -283,7 +282,7 @@ function Dashboard() {
                           setMascotSrc(mascot); setMascotMessage(message);
                         } catch { alert("Failed to complete task"); }
                       }}>✓</button>
-                      <button className="delete-btn-small" onClick={async () => {
+                      <button className="delete-btn" onClick={async () => {
                         if (window.confirm("Delete?")) { await deleteTask(task.id); loadTasks(); }
                       }}>×</button>
                     </div>
@@ -309,7 +308,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: HABITS (Taking up half) */}
+        {/*HABITS) */}
         <div className="dashboard-right-col">
             <div className="habits-section full-height" style={{ display: 'flex', flexDirection: 'column', maxHeight: '600px' }}>
             <div className="section-header">

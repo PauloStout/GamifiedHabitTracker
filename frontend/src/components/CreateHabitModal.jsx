@@ -72,10 +72,6 @@ export default function CreateHabitModal({ onClose, onCreated, habit, onUpdated 
       <div className="modal">
         <div className="modal-header">
           <h3>{habit ? "Edit Habit" : "Edit / Create Habit"}</h3>
-          <div className="modal-header-actions">
-            <button className="modal-cancel-btn" onClick={onClose}>Cancel</button>
-            <button className="modal-save-btn" onClick={submit}>Save</button>
-          </div>
         </div>
 
         <div className="modal-body">
@@ -136,6 +132,11 @@ export default function CreateHabitModal({ onClose, onCreated, habit, onUpdated 
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="modal-cancel-btn" onClick={onClose}>Cancel</button>
+          <button className="modal-save-btn" onClick={submit}>Save</button>
         </div>
       </div>
     </div>

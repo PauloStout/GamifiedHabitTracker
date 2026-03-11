@@ -11,11 +11,11 @@ from django.utils import timezone
 
 def run_test():
     try:
-        habit = Habit.objects.get(id=47)
+        habit = Habit.objects.get(id=79)
 
         # Set streak to 7 and last completed to yesterday
         habit.last_completed_date = timezone.now().date() - timedelta(days=1)
-        habit.current_streak = 7
+        habit.current_streak = 2
         habit.save()
 
         print(f"Success! Habit '{habit.habit_title}' (ID updated.")

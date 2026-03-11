@@ -3,9 +3,7 @@ from datetime import date, timedelta
 from tracker.models import DailyMetrics
 
 def update_daily_metrics(user, xp=0, focus_minutes=0, completed_date=None):
-    """
-    Updates the user's daily metrics for today (or given date)
-    """
+    #updates the user's daily metrics for today
     completed_date = completed_date or date.today()
     metrics, created = DailyMetrics.objects.get_or_create(user=user, date=completed_date)
     metrics.weekly_xp += xp
@@ -16,7 +14,7 @@ def update_daily_metrics(user, xp=0, focus_minutes=0, completed_date=None):
 def reset_weekly_leaderboards():
     today = timezone.now().date()
 
-    # If today is Monday → reset
+    #if today is Monday → reset
     if today.weekday() == 0:
         DailyMetrics.objects.update(
             weekly_xp=0,

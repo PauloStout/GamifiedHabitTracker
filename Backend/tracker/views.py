@@ -42,7 +42,7 @@ class HabitViewSet(ModelViewSet):
 
         for habit in habits:
             if habit.should_reset():
-                # If user missed yesterday → reset streak
+                #if user missed yesterday → reset streak
                 yesterday = today - timezone.timedelta(days=1)
 
                 if habit.last_completed_date and habit.last_completed_date < yesterday:
@@ -90,19 +90,17 @@ class TaskViewSet(ModelViewSet):
                 "level": profile.level,
             })
 
-        # Mark complete
         task.is_completed = True
         task.save()
         task.subtasks.update(is_completed=True)
 
-        # Award XP
         xp_awarded, profile = award_xp(
             request.user,
             base_xp=task.xp_reward,
             obj_theme=task.task_theme
         )
 
-        # 🔥 Update DailyMetrics
+        #update DailyMetrics
         today = timezone.now().date()
         daily_metric, _ = DailyMetrics.objects.get_or_create(
             user=request.user,
@@ -125,7 +123,6 @@ class SubTaskViewSet(ModelViewSet):
     serializer_class = SubTaskSerializer
     permission_classes = [IsAuthenticated]
 
-    # ✅ Add "toggle" action
     @action(detail=True, methods=["post"])
     def toggle(self, request, pk=None):
         subtask = self.get_object()
@@ -171,12 +168,11 @@ class UserPodViewSet(ModelViewSet):
 def dashboard_data(request):
 
 
-    # Ensure user is logged in
+    #checks user is logged in
     if not request.user.is_authenticated:
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
     try:
-        #tracker/views.py - dashboard_data
         profile = UserProfile.objects.select_related("user").get(user=request.user)
         data = {
             "first_name": profile.user.first_name,
@@ -210,7 +206,6 @@ def add_xp(request):
     except UserProfile.DoesNotExist:
         return JsonResponse({"error": "Profile not found"}, status=404)
 
-# views.py
 @api_view(["POST"])
 def add_habit(request):
     name = request.data.get("name")
@@ -226,20 +221,17 @@ def add_habit(request):
         "name": habit.name
     })
 
-
-# tracker/views.py
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def complete_habit(request, habit_id):
     try:
         habit = Habit.objects.get(id=habit_id, user=request.user)
         today = timezone.now().date()
-        xp_awarded = 0  # Default if already completed today
+        xp_awarded = 0  #defaults if already completed today
 
         if habit.last_completed_date != today:
             habit.is_completed = True
-            habit.update_streak()  # This updates the streak in the DB
+            habit.update_streak()  #updates the streak in the DB
             xp_awarded, profile = award_xp(
                 request.user,
                 base_xp=habit.xp_reward,
@@ -247,7 +239,7 @@ def complete_habit(request, habit_id):
             )
             update_daily_xp(user=request.user, xp=xp_awarded)
         else:
-            # If already completed, we still need profile for the response
+            # If already completed, needs profile for the response
             profile = request.user.userprofile
 
         return JsonResponse({
@@ -256,7 +248,7 @@ def complete_habit(request, habit_id):
             "level": profile.level,
             "habit_id": habit.id,
             "is_completed": habit.is_completed,
-            "current_streak": habit.current_streak  # <-- ADD THIS LINE
+            "current_streak": habit.current_streak
         })
 
     except Habit.DoesNotExist:
@@ -299,14 +291,12 @@ class FocusSessionViewSet(ModelViewSet):
 
         today = timezone.now().date()
 
-        # ✅ AWARD XP TO USER PROFILE
         xp_awarded, profile = award_xp(
             self.request.user,
             base_xp=xp_to_award,
             obj_theme=None  # focus sessions don’t use themes
         )
 
-        # ✅ UPDATE DAILY METRICS
         daily_metric, _ = DailyMetrics.objects.get_or_create(
             user=self.request.user,
             metric_date=today
@@ -316,7 +306,6 @@ class FocusSessionViewSet(ModelViewSet):
         daily_metric.xp_earned += xp_awarded
         daily_metric.save()
 
-        # ✅ SAVE FOCUS SESSION
         serializer.save(
             user=self.request.user,
             xp_earned=xp_awarded
@@ -333,7 +322,6 @@ def leaderboard_view(request):
         results = (
             DailyMetrics.objects
             .filter(metric_date__gte=start_week)
-            # We add 'user__userprofile__level' to the values we pull
             .values("user__first_name", "user__userprofile__level")
             .annotate(total=Sum("xp_earned"))
             .order_by("-total")[:10]
@@ -342,7 +330,7 @@ def leaderboard_view(request):
         data = [
             {
                 "name": r["user__first_name"],
-                "level": r["user__userprofile__level"], # Added this
+                "level": r["user__userprofile__level"],
                 "value": r["total"] or 0
             }
             for r in results
@@ -352,7 +340,7 @@ def leaderboard_view(request):
         results = (
             DailyMetrics.objects
             .filter(metric_date__gte=start_week)
-            .values("user__first_name", "user__userprofile__level") # Added level here too
+            .values("user__first_name", "user__userprofile__level")
             .annotate(total=Sum("total_study_minutes"))
             .order_by("-total")[:10]
         )
@@ -415,8 +403,8 @@ def user_progress(request):
 
         data.append({
             "date": metric.metric_date.strftime("%d %b"),
-            "weekly_xp": weekly_xp, # Keeps the weekly sum in case you want it elsewhere
-            "daily_xp": metric.xp_earned, # <-- ADD THIS LINE
+            "weekly_xp": weekly_xp, ##keeps the weekly sum in case you want it elsewhere
+            "daily_xp": metric.xp_earned,
             "focus_minutes": metric.total_study_minutes,
             "streak": metric.habits_completed,
         })

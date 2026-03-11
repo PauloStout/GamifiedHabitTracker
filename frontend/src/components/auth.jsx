@@ -115,7 +115,7 @@ export default function Auth() {
               <label className="auth-label">I am motivated by:</label>
               <textarea
                 className="auth-textarea"
-                placeholder="I am motivated by..."
+                placeholder="my family"
                 value={motivation}
                 onChange={(e) => setMotivation(e.target.value)}
               />

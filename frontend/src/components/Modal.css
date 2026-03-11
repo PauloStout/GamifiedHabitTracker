@@ -1,8 +1,3 @@
-/* =============================================
-   MODALS (CreateHabitModal & CreateTaskModal)
-   ============================================= */
-
-/* Overlay backdrop */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -20,7 +15,6 @@
   to { opacity: 1; }
 }
 
-/* Modal card */
 .modal {
   background: white;
   border-radius: var(--radius-lg);
@@ -37,7 +31,6 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Modal header - dark band */
 .modal-header {
   background: var(--color-black);
   color: white;
@@ -91,12 +84,10 @@
   opacity: 0.85;
 }
 
-/* Modal body */
 .modal-body {
   padding: 24px;
 }
 
-/* Field label */
 .modal-label {
   display: block;
   font-family: var(--font-display);
@@ -111,7 +102,6 @@
   margin-top: 0;
 }
 
-/* Input / Textarea / Select */
 .modal-input,
 .modal-textarea,
 .modal-select {
@@ -147,7 +137,6 @@
   cursor: pointer;
 }
 
-/* Subtasks */
 .subtask-list {
   display: flex;
   flex-direction: column;
@@ -196,19 +185,26 @@
   opacity: 0.7;
 }
 
-/* Difficulty stars / dropdown */
 .difficulty-select-wrapper {
   position: relative;
 }
 
-/* Preset picker */
 .preset-section {
   margin-top: 16px;
   padding-top: 16px;
   border-top: 1px solid #eee;
 }
 
-/* Full-width create button (fallback if no header buttons) */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
 .modal-submit-btn {
   width: 100%;
   padding: 14px;
@@ -224,4 +220,3 @@
 .modal-submit-btn:hover {
   opacity: 0.85;
 }
-

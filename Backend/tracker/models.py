@@ -2,13 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-# -----------------------------
-# USER PROFILE (extends Django User)
-# -----------------------------
 class UserProfile(models.Model):
-    # -----------------------------
-    # THEME SYSTEM
-    # -----------------------------
     THEME_CHOICES = [
         ("studies", "Studies"),
         ("exercise", "Exercise"),
@@ -17,39 +11,23 @@ class UserProfile(models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    # -----------------------------
-    # GAMIFICATION CORE
-    # -----------------------------
     level = models.IntegerField(default=1)
     total_xp = models.IntegerField(default=0)
     current_level_xp = models.IntegerField(default=0)
     xp_for_next_level = models.IntegerField(default=100)
-
-    # -----------------------------
-    # PERSONALISATION
-    # -----------------------------
     motivation = models.CharField(max_length=255, blank=True)
-
     primary_theme = models.CharField(
         max_length=50,
         choices=THEME_CHOICES,
         default="studies"
     )
-
-    # -----------------------------
-    # FEATURE TOGGLES
-    # -----------------------------
     dark_mode_enabled = models.BooleanField(default=False)
     xp_enabled = models.BooleanField(default=True)
     streaks_enabled = models.BooleanField(default=True)
     leaderboards_enabled = models.BooleanField(default=True)
-
     date_created = models.DateTimeField(auto_now_add=True)
 
-    # -----------------------------
-    # XP SYSTEM
-    # -----------------------------
+    #xp system
     def add_xp(self, xp):
         if not self.xp_enabled:
             return
@@ -64,9 +42,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.first_name
 
-# -----------------------------
-# HABITS
-# -----------------------------
+
 class Habit(models.Model):
     THEME_CHOICES = [("studies", "Studies"),("exercise", "Exercise"),("sleep", "Sleep"),("nutrition", "Nutrition"),
     ]
@@ -111,11 +87,6 @@ class Habit(models.Model):
         return self.habit_title
 
 
-
-
-# -----------------------------
-# TASKS (one-off)
-# -----------------------------
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tasks")
     task_title = models.CharField(max_length=100)
@@ -139,9 +110,6 @@ class Task(models.Model):
         return self.task_title
 
 
-# -----------------------------
-# SUBTASKS (for habits OR tasks)
-# -----------------------------
 class SubTask(models.Model):
     task = models.ForeignKey(
         Task,
@@ -155,9 +123,6 @@ class SubTask(models.Model):
         return self.description
 
 
-# -----------------------------
-# FOCUS / POMODORO SESSIONS
-# -----------------------------
 class FocusSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     duration_minutes = models.IntegerField()
@@ -170,9 +135,6 @@ class FocusSession(models.Model):
         return f"{self.user.username} - {self.duration_minutes}min x{self.sessions_completed}"
 
 
-# -----------------------------
-# DAILY METRICS (progress tracking)
-# -----------------------------
 class DailyMetrics(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     metric_date = models.DateField()
@@ -180,8 +142,6 @@ class DailyMetrics(models.Model):
     total_tasks_completed = models.IntegerField(default=0)
     habits_completed = models.IntegerField(default=0)
     xp_earned = models.IntegerField(default=0)
-
-    # NEW WEEKLY AGGREGATES
     weekly_xp = models.IntegerField(default=0)
     weekly_focus_minutes = models.IntegerField(default=0)
 
@@ -191,9 +151,7 @@ class DailyMetrics(models.Model):
     def __str__(self):
         return f"{self.user.first_name} - {self.metric_date}"
 
-# -----------------------------
-# REMINDERS
-# -----------------------------
+
 class Reminder(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     habit = models.ForeignKey(Habit, null=True, blank=True, on_delete=models.SET_NULL)
@@ -207,9 +165,6 @@ class Reminder(models.Model):
         return f"Reminder for {self.user.first_name}"
 
 
-# -----------------------------
-# ACHIEVEMENTS
-# -----------------------------
 class Achievement(models.Model):
     achievement_name = models.CharField(max_length=100)
     description = models.TextField()
@@ -229,9 +184,6 @@ class UserAchievement(models.Model):
         unique_together = ("user", "achievement")
 
 
-# -----------------------------
-# SOCIAL PODS
-# -----------------------------
 class SocialPod(models.Model):
     pod_name = models.CharField(max_length=100)
     pod_category = models.CharField(max_length=50)

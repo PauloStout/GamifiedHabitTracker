@@ -1,12 +1,12 @@
 import axios from "axios";
 
-// PUBLIC API (no auth required)
+// PUBLIC API with no auth required
 export const publicApi = axios.create({
   baseURL: "http://127.0.0.1:8000/api/",
   withCredentials: true,
 });
 
-// PRIVATE API (JWT attached automatically)
+// PRIVATE API with JWT attached automatically
 export const privateApi = axios.create({
   baseURL: "http://127.0.0.1:8000/api/",
   withCredentials: true,
